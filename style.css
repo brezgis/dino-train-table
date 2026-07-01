@@ -218,6 +218,163 @@ body[data-mode="toybox"] .deco { opacity: 0; }
 .car:active, .engine-group:active { cursor: grabbing; }
 .held { cursor: grabbing; filter: drop-shadow(0 7px 6px rgba(0,0,0,0.32)); }
 
+.blink,
+.wing,
+.tail-sway,
+.trunk-sway,
+.neck-sway,
+.saber-ear-twitch,
+.trex-head-bob,
+.triceratops-nod,
+.sail-shimmer,
+.raptor-head-tilt,
+.crest-sway,
+.sail-sway {
+  transform-box: fill-box;
+}
+
+.blink {
+  transform-origin: center;
+  animation: animalBlink 4.5s infinite;
+}
+.blink-saber { animation-delay: -0.2s; }
+.blink-mammoth { animation-delay: -0.75s; }
+.blink-trex { animation-delay: -1.2s; }
+.blink-triceratops { animation-delay: -1.7s; }
+.blink-stego { animation-delay: -2.1s; }
+.blink-bronto { animation-delay: -2.55s; }
+.blink-anky { animation-delay: -3s; }
+.blink-ptero { animation-delay: -3.45s; }
+.blink-dimetrodon { animation-delay: -3.85s; }
+.blink-raptor { animation-delay: -4.15s; }
+.blink-parasaur { animation-delay: -0.5s; }
+.blink-spino { animation-delay: -1.95s; }
+.blink-plesio { animation-delay: -2.9s; }
+
+@keyframes animalBlink {
+  0%, 88%, 94%, 100% { transform: scaleY(1); }
+  90%, 92% { transform: scaleY(0.08); }
+}
+
+.wing {
+  animation: wingDrift 3.8s ease-in-out infinite alternate;
+}
+.wing-left { transform-origin: right center; }
+.wing-right { transform-origin: left center; animation-name: wingDriftReverse; }
+
+@keyframes wingDrift {
+  from { transform: rotate(-1.4deg); }
+  to { transform: rotate(2.2deg); }
+}
+@keyframes wingDriftReverse {
+  from { transform: rotate(1.4deg); }
+  to { transform: rotate(-2.2deg); }
+}
+
+.trunk-sway {
+  transform-origin: top center;
+  animation: trunkSway 4.9s ease-in-out infinite alternate;
+}
+@keyframes trunkSway {
+  from { transform: rotate(-2deg); }
+  to { transform: rotate(2deg); }
+}
+
+.tail-sway {
+  transform-origin: left center;
+  animation: tailSway 4.8s ease-in-out infinite alternate;
+}
+.anky-tail { animation-duration: 5.4s; }
+@keyframes tailSway {
+  from { transform: rotate(-1.7deg); }
+  to { transform: rotate(1.7deg); }
+}
+
+.neck-sway {
+  transform-origin: bottom center;
+  animation: neckSway 5.6s ease-in-out infinite alternate;
+}
+.plesio-neck { animation-duration: 5.1s; }
+@keyframes neckSway {
+  from { transform: rotate(-1.4deg); }
+  to { transform: rotate(1.4deg); }
+}
+
+.saber-ear-twitch {
+  transform-origin: bottom center;
+  animation: earTwitch 5.8s ease-in-out infinite;
+}
+@keyframes earTwitch {
+  0%, 82%, 100% { transform: rotate(0deg); }
+  87% { transform: rotate(-2deg); }
+  92% { transform: rotate(1.2deg); }
+}
+
+.trex-head-bob {
+  transform-origin: center bottom;
+  animation: tinyHeadBob 4.4s ease-in-out infinite alternate;
+}
+@keyframes tinyHeadBob {
+  from { transform: translateY(-1px) rotate(-0.5deg); }
+  to { transform: translateY(1.5px) rotate(0.5deg); }
+}
+
+.triceratops-nod {
+  transform-origin: center bottom;
+  animation: smallNod 5.2s ease-in-out infinite alternate;
+}
+@keyframes smallNod {
+  from { transform: rotate(-0.8deg); }
+  to { transform: rotate(1.1deg); }
+}
+
+.sail-shimmer {
+  transform-origin: bottom center;
+  animation: sailShimmer 5.5s ease-in-out infinite alternate;
+}
+@keyframes sailShimmer {
+  from { transform: skewX(-0.8deg) scaleX(0.99); }
+  to { transform: skewX(0.8deg) scaleX(1.01); }
+}
+
+.raptor-head-tilt {
+  transform-origin: right center;
+  animation: raptorHeadTilt 4.2s ease-in-out infinite alternate;
+}
+@keyframes raptorHeadTilt {
+  from { transform: rotate(-1deg); }
+  to { transform: rotate(1.3deg); }
+}
+
+.crest-sway {
+  transform-origin: left center;
+  animation: crestSway 5.7s ease-in-out infinite alternate;
+}
+@keyframes crestSway {
+  from { transform: rotate(-1.2deg); }
+  to { transform: rotate(1.2deg); }
+}
+
+.sail-sway {
+  transform-origin: bottom center;
+  animation: spinoSailSway 5.9s ease-in-out infinite alternate;
+}
+@keyframes spinoSailSway {
+  from { transform: rotate(-1deg); }
+  to { transform: rotate(1deg); }
+}
+
+.held .blink,
+.held [class*="sway"],
+.held .wing,
+.held .saber-ear-twitch,
+.held .trex-head-bob,
+.held .triceratops-nod,
+.held .sail-shimmer,
+.held .raptor-head-tilt {
+  animation-play-state: paused;
+}
+
 .car.bounce {
   animation: bouncePop 0.45s ease;
 }

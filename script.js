@@ -66,11 +66,11 @@ const ART = {
   // Saber-toothed cat: tawny head seated on the rim, ears up, two long fangs hanging down.
   saber: () => `
     <ellipse cx="70" cy="0" rx="20" ry="19" fill="#cf9450" stroke="#2c2418" stroke-width="2"></ellipse>
-    <path d="M55,-13 L51,-28 L64,-15 Z" fill="#cf9450" stroke="#2c2418" stroke-width="2"></path>
-    <path d="M85,-13 L89,-28 L76,-15 Z" fill="#cf9450" stroke="#2c2418" stroke-width="2"></path>
+    <path class="saber-ear-twitch" d="M55,-13 L51,-28 L64,-15 Z" fill="#cf9450" stroke="#2c2418" stroke-width="2"></path>
+    <path class="saber-ear-twitch" d="M85,-13 L89,-28 L76,-15 Z" fill="#cf9450" stroke="#2c2418" stroke-width="2"></path>
     <ellipse cx="70" cy="6" rx="11" ry="8" fill="#ecca9c"></ellipse>
-    <circle cx="63" cy="-3" r="2.4" fill="#2c2418"></circle>
-    <circle cx="77" cy="-3" r="2.4" fill="#2c2418"></circle>
+    <circle class="blink blink-saber" cx="63" cy="-3" r="2.4" fill="#2c2418"></circle>
+    <circle class="blink blink-saber" cx="77" cy="-3" r="2.4" fill="#2c2418"></circle>
     <path d="M66,4 L74,4 L70,9 Z" fill="#5a3a1f"></path>
     <path d="M65,9 L63,20 L68,11 Z" fill="#fbf4e4" stroke="#c9b48c" stroke-width="0.7"></path>
     <path d="M75,9 L77,20 L72,11 Z" fill="#fbf4e4" stroke="#c9b48c" stroke-width="0.7"></path>
@@ -80,45 +80,53 @@ const ART = {
     <path d="M46,20 Q40,-16 70,-18 Q100,-16 94,20 Z" fill="#8a5a34" stroke="#2c2418" stroke-width="2"></path>
     <ellipse cx="53" cy="2" rx="7" ry="10" fill="#754a28" stroke="#2c2418" stroke-width="1.5"></ellipse>
     <ellipse cx="87" cy="2" rx="7" ry="10" fill="#754a28" stroke="#2c2418" stroke-width="1.5"></ellipse>
-    <path d="M70,4 Q63,20 71,27" stroke="#2c2418" stroke-width="12" fill="none" stroke-linecap="round"></path>
-    <path d="M70,4 Q63,20 71,27" stroke="#8a5a34" stroke-width="9" fill="none" stroke-linecap="round"></path>
+    <g class="trunk-sway">
+      <path d="M70,4 Q63,20 71,27" stroke="#2c2418" stroke-width="12" fill="none" stroke-linecap="round"></path>
+      <path d="M70,4 Q63,20 71,27" stroke="#8a5a34" stroke-width="9" fill="none" stroke-linecap="round"></path>
+    </g>
     <path d="M62,12 Q49,22 60,30" stroke="#2c2418" stroke-width="7.5" fill="none" stroke-linecap="round"></path>
     <path d="M78,12 Q91,22 80,30" stroke="#2c2418" stroke-width="7.5" fill="none" stroke-linecap="round"></path>
     <path d="M62,12 Q49,22 60,30" stroke="#f3ead2" stroke-width="5" fill="none" stroke-linecap="round"></path>
     <path d="M78,12 Q91,22 80,30" stroke="#f3ead2" stroke-width="5" fill="none" stroke-linecap="round"></path>
-    <circle cx="62" cy="-4" r="2.3" fill="#2c2418"></circle>
-    <circle cx="78" cy="-4" r="2.3" fill="#2c2418"></circle>
+    <circle class="blink blink-mammoth" cx="62" cy="-4" r="2.3" fill="#2c2418"></circle>
+    <circle class="blink blink-mammoth" cx="78" cy="-4" r="2.3" fill="#2c2418"></circle>
   `,
   // T. rex: big head over a chest that seats to the rim, teeth at the jaw, tiny arm.
   trex: () => `
     <path d="M60,10 q-9,3 -6,11" stroke="#2c2418" stroke-width="7" fill="none" stroke-linecap="round"></path>
     <path d="M60,10 q-9,3 -6,11" stroke="#4f7d4d" stroke-width="4" fill="none" stroke-linecap="round"></path>
-    <path d="M50,20 Q44,3 58,-3 Q62,-28 86,-26 Q106,-24 103,-3 Q102,6 90,8 Q93,20 83,20 L58,20 Q50,20 50,20 Z" fill="#5b8c5a" stroke="#2c2418" stroke-width="2" stroke-linejoin="round"></path>
-    <path d="M67,9 Q81,14 98,5" stroke="#2c2418" stroke-width="1.6" fill="none" stroke-linecap="round"></path>
-    <path d="M71,9 L73,14 L75,9 Z" fill="#fff"></path>
-    <path d="M81,10 L83,15 L85,10 Z" fill="#fff"></path>
-    <path d="M91,7 L93,11 L95,7 Z" fill="#fff"></path>
-    <circle cx="84" cy="-14" r="3.6" fill="#fff" stroke="#2c2418" stroke-width="1"></circle>
-    <circle cx="85" cy="-14" r="1.7" fill="#111"></circle>
-    <circle cx="100" cy="-3" r="1.4" fill="#2c2418"></circle>
+    <g class="trex-head-bob">
+      <path d="M50,20 Q44,3 58,-3 Q62,-28 86,-26 Q106,-24 103,-3 Q102,6 90,8 Q93,20 83,20 L58,20 Q50,20 50,20 Z" fill="#5b8c5a" stroke="#2c2418" stroke-width="2" stroke-linejoin="round"></path>
+      <path d="M67,9 Q81,14 98,5" stroke="#2c2418" stroke-width="1.6" fill="none" stroke-linecap="round"></path>
+      <path d="M71,9 L73,14 L75,9 Z" fill="#fff"></path>
+      <path d="M81,10 L83,15 L85,10 Z" fill="#fff"></path>
+      <path d="M91,7 L93,11 L95,7 Z" fill="#fff"></path>
+      <circle cx="84" cy="-14" r="3.6" fill="#fff" stroke="#2c2418" stroke-width="1"></circle>
+      <circle class="blink blink-trex" cx="85" cy="-14" r="1.7" fill="#111"></circle>
+      <circle cx="100" cy="-3" r="1.4" fill="#2c2418"></circle>
+    </g>
   `,
   // Triceratops: frill behind, big head to the rim, brow horns + nose horn, eyes.
   triceratops: () => `
-    <path d="M38,-8 A32,30 0 0 1 102,-8 L100,-2 Q70,7 40,-2 Z" fill="#caa977" stroke="#2c2418" stroke-width="2"></path>
-    <ellipse cx="70" cy="6" rx="20" ry="15" fill="#8c6239" stroke="#2c2418" stroke-width="2"></ellipse>
-    <path d="M56,-7 L52,-25 L63,-11 Z" fill="#e8d9c0" stroke="#2c2418" stroke-width="1.5"></path>
-    <path d="M84,-7 L88,-25 L77,-11 Z" fill="#e8d9c0" stroke="#2c2418" stroke-width="1.5"></path>
-    <path d="M66,14 L70,22 L74,14 Z" fill="#e8d9c0" stroke="#2c2418" stroke-width="1.2"></path>
-    <circle cx="63" cy="4" r="2" fill="#2c2418"></circle>
-    <circle cx="77" cy="4" r="2" fill="#2c2418"></circle>
+    <g class="triceratops-nod">
+      <path d="M38,-8 A32,30 0 0 1 102,-8 L100,-2 Q70,7 40,-2 Z" fill="#caa977" stroke="#2c2418" stroke-width="2"></path>
+      <ellipse cx="70" cy="6" rx="20" ry="15" fill="#8c6239" stroke="#2c2418" stroke-width="2"></ellipse>
+      <path d="M56,-7 L52,-25 L63,-11 Z" fill="#e8d9c0" stroke="#2c2418" stroke-width="1.5"></path>
+      <path d="M84,-7 L88,-25 L77,-11 Z" fill="#e8d9c0" stroke="#2c2418" stroke-width="1.5"></path>
+      <path d="M66,14 L70,22 L74,14 Z" fill="#e8d9c0" stroke="#2c2418" stroke-width="1.2"></path>
+      <circle class="blink blink-triceratops" cx="63" cy="4" r="2" fill="#2c2418"></circle>
+      <circle class="blink blink-triceratops" cx="77" cy="4" r="2" fill="#2c2418"></circle>
+    </g>
   `,
   // Stegosaurus: long low body seated on the rim, head at the front, tail, plates on the back.
   stego: () => `
     <ellipse cx="70" cy="12" rx="46" ry="12" fill="#6a9a54" stroke="#2c2418" stroke-width="2"></ellipse>
-    <path d="M113,9 Q129,5 134,13" stroke="#2c2418" stroke-width="10" fill="none" stroke-linecap="round"></path>
-    <path d="M113,9 Q129,5 134,13" stroke="#6a9a54" stroke-width="7" fill="none" stroke-linecap="round"></path>
+    <g class="tail-sway stego-tail">
+      <path d="M113,9 Q129,5 134,13" stroke="#2c2418" stroke-width="10" fill="none" stroke-linecap="round"></path>
+      <path d="M113,9 Q129,5 134,13" stroke="#6a9a54" stroke-width="7" fill="none" stroke-linecap="round"></path>
+    </g>
     <ellipse cx="30" cy="3" rx="12" ry="10" fill="#6a9a54" stroke="#2c2418" stroke-width="2"></ellipse>
-    <circle cx="25" cy="1" r="1.8" fill="#111"></circle>
+    <circle class="blink blink-stego" cx="25" cy="1" r="1.8" fill="#111"></circle>
     <polygon points="44,3 50,-16 56,3" fill="#e07a3f" stroke="#2c2418" stroke-width="1.5"></polygon>
     <polygon points="58,3 66,-23 74,3" fill="#e07a3f" stroke="#2c2418" stroke-width="1.5"></polygon>
     <polygon points="76,3 84,-20 92,3" fill="#e07a3f" stroke="#2c2418" stroke-width="1.5"></polygon>
@@ -127,21 +135,25 @@ const ART = {
   // Long-neck: rounded body on the rim, tail out back, long neck sweeping up to a small head.
   bronto: () => `
     <path d="M112,9 Q128,7 133,15" stroke="#2c2418" stroke-width="11" fill="none" stroke-linecap="round"></path>
-    <path d="M46,6 Q30,-16 40,-42 Q44,-54 57,-52" stroke="#2c2418" stroke-width="16" fill="none" stroke-linecap="round"></path>
     <ellipse cx="74" cy="12" rx="42" ry="12" fill="#6fa8a3" stroke="#2c2418" stroke-width="2"></ellipse>
     <path d="M112,9 Q128,7 133,15" stroke="#6fa8a3" stroke-width="8" fill="none" stroke-linecap="round"></path>
-    <path d="M46,6 Q30,-16 40,-42 Q44,-54 57,-52" stroke="#6fa8a3" stroke-width="13" fill="none" stroke-linecap="round"></path>
-    <ellipse cx="58" cy="-53" rx="10" ry="8" fill="#6fa8a3" stroke="#2c2418" stroke-width="1.5"></ellipse>
-    <circle cx="61" cy="-55" r="1.6" fill="#111"></circle>
+    <g class="neck-sway bronto-neck">
+      <path d="M46,6 Q30,-16 40,-42 Q44,-54 57,-52" stroke="#2c2418" stroke-width="16" fill="none" stroke-linecap="round"></path>
+      <path d="M46,6 Q30,-16 40,-42 Q44,-54 57,-52" stroke="#6fa8a3" stroke-width="13" fill="none" stroke-linecap="round"></path>
+      <ellipse cx="58" cy="-53" rx="10" ry="8" fill="#6fa8a3" stroke="#2c2418" stroke-width="1.5"></ellipse>
+      <circle class="blink blink-bronto" cx="61" cy="-55" r="1.6" fill="#111"></circle>
+    </g>
   `,
   // Ankylosaurus: armored body on the rim, head at the front, back plates, clubbed tail (kept in bounds).
   anky: () => `
-    <path d="M114,9 Q124,7 122,15" stroke="#2c2418" stroke-width="10" fill="none" stroke-linecap="round"></path>
     <path d="M22,18 Q16,2 36,0 Q70,-5 104,0 Q124,2 118,18 Z" fill="#9c7a4a" stroke="#2c2418" stroke-width="2"></path>
-    <path d="M114,9 Q124,7 122,15" stroke="#9c7a4a" stroke-width="7" fill="none" stroke-linecap="round"></path>
-    <circle cx="121" cy="15" r="7" fill="#7a5f3a" stroke="#2c2418" stroke-width="2"></circle>
+    <g class="tail-sway anky-tail">
+      <path d="M114,9 Q124,7 122,15" stroke="#2c2418" stroke-width="10" fill="none" stroke-linecap="round"></path>
+      <path d="M114,9 Q124,7 122,15" stroke="#9c7a4a" stroke-width="7" fill="none" stroke-linecap="round"></path>
+      <circle cx="121" cy="15" r="7" fill="#7a5f3a" stroke="#2c2418" stroke-width="2"></circle>
+    </g>
     <ellipse cx="26" cy="9" rx="12" ry="9" fill="#b08a52" stroke="#2c2418" stroke-width="2"></ellipse>
-    <circle cx="20" cy="8" r="1.6" fill="#111"></circle>
+    <circle class="blink blink-anky" cx="20" cy="8" r="1.6" fill="#111"></circle>
     <polygon points="42,0 48,-9 54,0" fill="#7a5f3a" stroke="#2c2418" stroke-width="1.2"></polygon>
     <polygon points="58,-2 64,-12 70,-2" fill="#7a5f3a" stroke="#2c2418" stroke-width="1.2"></polygon>
     <polygon points="76,-2 82,-12 88,-2" fill="#7a5f3a" stroke="#2c2418" stroke-width="1.2"></polygon>
@@ -149,15 +161,15 @@ const ART = {
   `,
   // Pterodactyl: wings spread behind, body seated with little feet on the rim, crest + beak up top.
   ptero: () => `
-    <path d="M68,2 Q40,-16 15,-3 Q42,1 60,9 Z" fill="#9a7dba" stroke="#2c2418" stroke-width="2"></path>
-    <path d="M72,2 Q100,-16 125,-3 Q98,1 80,9 Z" fill="#9a7dba" stroke="#2c2418" stroke-width="2"></path>
+    <path class="wing wing-left" d="M68,2 Q40,-16 15,-3 Q42,1 60,9 Z" fill="#9a7dba" stroke="#2c2418" stroke-width="2"></path>
+    <path class="wing wing-right" d="M72,2 Q100,-16 125,-3 Q98,1 80,9 Z" fill="#9a7dba" stroke="#2c2418" stroke-width="2"></path>
     <path d="M70,-1 L70,-24" stroke="#2c2418" stroke-width="11" fill="none" stroke-linecap="round"></path>
     <ellipse cx="70" cy="8" rx="10" ry="12" fill="#8e6fae" stroke="#2c2418" stroke-width="2"></ellipse>
     <path d="M70,-1 L70,-24" stroke="#8e6fae" stroke-width="8" fill="none" stroke-linecap="round"></path>
     <ellipse cx="70" cy="-28" rx="8" ry="7" fill="#8e6fae" stroke="#2c2418" stroke-width="1.5"></ellipse>
     <path d="M63,-33 L70,-45 L74,-32 Z" fill="#6a4f8a" stroke="#2c2418" stroke-width="1"></path>
     <path d="M70,-31 L83,-35 L70,-25 Z" fill="#f2a33a" stroke="#2c2418" stroke-width="1"></path>
-    <circle cx="73" cy="-29" r="1.6" fill="#111"></circle>
+    <circle class="blink blink-ptero" cx="73" cy="-29" r="1.6" fill="#111"></circle>
     <path d="M64,17 L62,23 M76,17 L78,23" stroke="#2c2418" stroke-width="4" stroke-linecap="round"></path>
     <path d="M64,17 L62,23 M76,17 L78,23" stroke="#c98a3a" stroke-width="2.2" stroke-linecap="round"></path>
   `,
@@ -166,21 +178,25 @@ const ART = {
     <path d="M112,13 Q129,11 134,19" stroke="#2c2418" stroke-width="9" fill="none" stroke-linecap="round"></path>
     <path d="M112,13 Q129,11 134,19" stroke="#7e9a52" stroke-width="6" fill="none" stroke-linecap="round"></path>
     <ellipse cx="72" cy="14" rx="45" ry="11" fill="#7e9a52" stroke="#2c2418" stroke-width="2"></ellipse>
-    <path d="M42,9 Q56,-38 78,-41 Q100,-37 108,9 Z" fill="#e08a54" stroke="#2c2418" stroke-width="2" stroke-linejoin="round"></path>
-    <path d="M54,3 L60,-24 M68,1 L74,-35 M84,1 L86,-31 M98,4 L98,-13" stroke="#b45f3e" stroke-width="1.7" fill="none" stroke-linecap="round"></path>
+    <g class="sail-shimmer dimetrodon-sail">
+      <path d="M42,9 Q56,-38 78,-41 Q100,-37 108,9 Z" fill="#e08a54" stroke="#2c2418" stroke-width="2" stroke-linejoin="round"></path>
+      <path d="M54,3 L60,-24 M68,1 L74,-35 M84,1 L86,-31 M98,4 L98,-13" stroke="#b45f3e" stroke-width="1.7" fill="none" stroke-linecap="round"></path>
+    </g>
     <ellipse cx="29" cy="10" rx="15" ry="10" fill="#7e9a52" stroke="#2c2418" stroke-width="2"></ellipse>
     <path d="M15,8 Q6,11 13,17 L27,16" fill="#7e9a52" stroke="#2c2418" stroke-width="1.8" stroke-linejoin="round"></path>
     <path d="M16,14 l4,-0.5 M22,16 l0,-3" stroke="#fff" stroke-width="1.3" stroke-linecap="round"></path>
-    <circle cx="31" cy="6" r="2" fill="#111"></circle>
+    <circle class="blink blink-dimetrodon" cx="31" cy="6" r="2" fill="#111"></circle>
   `,
   // Velociraptor: compact hunter, head low and forward (facing left), stiff tail, little clawed foot.
   raptor: () => `
     <path d="M100,8 Q122,0 134,10" stroke="#2c2418" stroke-width="8" fill="none" stroke-linecap="round"></path>
     <path d="M100,8 Q122,0 134,10" stroke="#8bbf7a" stroke-width="5" fill="none" stroke-linecap="round"></path>
     <path d="M96,18 Q104,-2 86,-12 Q66,-22 46,-16 Q34,-12 34,0 Q36,10 54,14 Q78,16 96,18 Z" fill="#8bbf7a" stroke="#2c2418" stroke-width="2" stroke-linejoin="round"></path>
-    <path d="M46,-15 Q31,-16 24,-8 Q34,-6 46,-8 Z" fill="#8bbf7a" stroke="#2c2418" stroke-width="1.6" stroke-linejoin="round"></path>
-    <path d="M25,-9 l7,1" stroke="#2c2418" stroke-width="0.9" fill="none"></path>
-    <circle cx="42" cy="-11" r="2" fill="#111"></circle>
+    <g class="raptor-head-tilt">
+      <path d="M46,-15 Q31,-16 24,-8 Q34,-6 46,-8 Z" fill="#8bbf7a" stroke="#2c2418" stroke-width="1.6" stroke-linejoin="round"></path>
+      <path d="M25,-9 l7,1" stroke="#2c2418" stroke-width="0.9" fill="none"></path>
+      <circle class="blink blink-raptor" cx="42" cy="-11" r="2" fill="#111"></circle>
+    </g>
     <path d="M60,18 q-4,6 2,11 q4,-2 3,-6" stroke="#2c2418" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
     <path d="M60,18 q-4,6 2,11 q4,-2 3,-6" stroke="#8bbf7a" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
   `,
@@ -191,23 +207,27 @@ const ART = {
     <ellipse cx="76" cy="14" rx="40" ry="11" fill="#6aa39d" stroke="#2c2418" stroke-width="2"></ellipse>
     <path d="M56,10 Q46,-8 52,-22 Q58,-32 46,-34" stroke="#2c2418" stroke-width="14" fill="none" stroke-linecap="round"></path>
     <path d="M56,10 Q46,-8 52,-22 Q58,-32 46,-34" stroke="#6aa39d" stroke-width="11" fill="none" stroke-linecap="round"></path>
-    <path d="M50,-38 Q72,-46 92,-30" stroke="#2c2418" stroke-width="9" fill="none" stroke-linecap="round"></path>
-    <path d="M50,-38 Q72,-46 92,-30" stroke="#8bbcb6" stroke-width="6" fill="none" stroke-linecap="round"></path>
+    <g class="crest-sway">
+      <path d="M50,-38 Q72,-46 92,-30" stroke="#2c2418" stroke-width="9" fill="none" stroke-linecap="round"></path>
+      <path d="M50,-38 Q72,-46 92,-30" stroke="#8bbcb6" stroke-width="6" fill="none" stroke-linecap="round"></path>
+    </g>
     <ellipse cx="40" cy="-33" rx="14" ry="10" fill="#6aa39d" stroke="#2c2418" stroke-width="2"></ellipse>
     <path d="M28,-35 Q18,-37 20,-30 L34,-30 Z" fill="#e0b06a" stroke="#2c2418" stroke-width="1.6" stroke-linejoin="round"></path>
-    <circle cx="38" cy="-36" r="1.9" fill="#111"></circle>
+    <circle class="blink blink-parasaur" cx="38" cy="-36" r="1.9" fill="#111"></circle>
   `,
   // Spinosaurus: teal body, tall angular sail, a long fish-catching snout at the front (facing left).
   spino: () => `
     <path d="M110,13 Q127,11 133,19" stroke="#2c2418" stroke-width="9" fill="none" stroke-linecap="round"></path>
     <path d="M110,13 Q127,11 133,19" stroke="#4e9a8a" stroke-width="6" fill="none" stroke-linecap="round"></path>
     <ellipse cx="74" cy="14" rx="42" ry="11" fill="#4e9a8a" stroke="#2c2418" stroke-width="2"></ellipse>
-    <path d="M48,9 L62,-34 L82,-34 L98,9 Z" fill="#d66b54" stroke="#2c2418" stroke-width="2" stroke-linejoin="round"></path>
-    <path d="M60,4 L66,-26 M74,3 L76,-30 M86,4 L84,-24" stroke="#9f4639" stroke-width="1.6" fill="none" stroke-linecap="round"></path>
+    <g class="sail-sway spino-sail">
+      <path d="M48,9 L62,-34 L82,-34 L98,9 Z" fill="#d66b54" stroke="#2c2418" stroke-width="2" stroke-linejoin="round"></path>
+      <path d="M60,4 L66,-26 M74,3 L76,-30 M86,4 L84,-24" stroke="#9f4639" stroke-width="1.6" fill="none" stroke-linecap="round"></path>
+    </g>
     <path d="M50,10 Q40,-2 44,-14 Q48,-24 60,-23 L60,-10 Q56,4 50,10 Z" fill="#4e9a8a" stroke="#2c2418" stroke-width="2" stroke-linejoin="round"></path>
     <path d="M44,-16 Q28,-19 16,-13 Q30,-11 45,-9 Z" fill="#4e9a8a" stroke="#2c2418" stroke-width="1.8" stroke-linejoin="round"></path>
     <path d="M18,-13 l24,3" stroke="#2c2418" stroke-width="0.9" fill="none"></path>
-    <circle cx="50" cy="-15" r="2" fill="#111"></circle>
+    <circle class="blink blink-spino" cx="50" cy="-15" r="2" fill="#111"></circle>
   `,
   // Plesiosaur: round sea reptile with paddle flippers and a long curving neck (head facing left).
   plesio: () => `
@@ -216,11 +236,13 @@ const ART = {
     <path d="M56,20 Q44,30 33,24 M92,20 Q106,30 117,24" stroke="#2c2418" stroke-width="8" fill="none" stroke-linecap="round"></path>
     <path d="M56,20 Q44,30 33,24 M92,20 Q106,30 117,24" stroke="#5a9ccb" stroke-width="5" fill="none" stroke-linecap="round"></path>
     <ellipse cx="74" cy="14" rx="40" ry="12" fill="#4f8fbd" stroke="#2c2418" stroke-width="2"></ellipse>
-    <path d="M52,11 Q36,-6 44,-30 Q49,-46 66,-47" stroke="#2c2418" stroke-width="13" fill="none" stroke-linecap="round"></path>
-    <path d="M52,11 Q36,-6 44,-30 Q49,-46 66,-47" stroke="#4f8fbd" stroke-width="10" fill="none" stroke-linecap="round"></path>
-    <ellipse cx="70" cy="-49" rx="13" ry="9" fill="#4f8fbd" stroke="#2c2418" stroke-width="2"></ellipse>
-    <path d="M58,-50 Q49,-51 51,-45 L64,-45 Z" fill="#4f8fbd" stroke="#2c2418" stroke-width="1.5" stroke-linejoin="round"></path>
-    <circle cx="66" cy="-51" r="1.8" fill="#111"></circle>
+    <g class="neck-sway plesio-neck">
+      <path d="M52,11 Q36,-6 44,-30 Q49,-46 66,-47" stroke="#2c2418" stroke-width="13" fill="none" stroke-linecap="round"></path>
+      <path d="M52,11 Q36,-6 44,-30 Q49,-46 66,-47" stroke="#4f8fbd" stroke-width="10" fill="none" stroke-linecap="round"></path>
+      <ellipse cx="70" cy="-49" rx="13" ry="9" fill="#4f8fbd" stroke="#2c2418" stroke-width="2"></ellipse>
+      <path d="M58,-50 Q49,-51 51,-45 L64,-45 Z" fill="#4f8fbd" stroke="#2c2418" stroke-width="1.5" stroke-linejoin="round"></path>
+      <circle class="blink blink-plesio" cx="66" cy="-51" r="1.8" fill="#111"></circle>
+    </g>
   `,
 };
 
