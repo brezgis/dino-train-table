@@ -506,16 +506,10 @@ function advance(pos, dist) {
 }
 
 /* scan ahead of a position for the first on-track vehicle within maxDist.
-   Exact (covers s-ranges edge by edge), follows the levers like advance does. */
-let onTrackByEdge = new Map();
-function rebuildTrackIndex() {
-  onTrackByEdge = new Map();
-  for (const v of vehicles) {
-    if (v.state !== "track") continue;
-    if (!onTrackByEdge.has(v.pos.e)) onTrackByEdge.set(v.pos.e, []);
-    onTrackByEdge.get(v.pos.e).push(v);
-  }
-}
+   Exact (covers s-ranges edge by edge), follows the levers like advance does.
+   Reads each vehicle's live (e, s) — positions change mid-frame as trains
+   advance, so a prebuilt index would go stale the moment anything crossed a
+   node. With a table's worth of toys, checking them all is free. */
 function scanAhead(start, maxDist, ignore) {
   const pos = { e: start.e, s: start.s, dir: start.dir };
   let traveled = 0, guard = 8;
@@ -523,7 +517,8 @@ function scanAhead(start, maxDist, ignore) {
     const E = EDGES[pos.e];
     const span = Math.min(maxDist - traveled, pos.dir > 0 ? E.len - pos.s : pos.s);
     let best = null;
-    for (const v of onTrackByEdge.get(pos.e) || []) {
+    for (const v of vehicles) {
+      if (v.state !== "track" || v.pos.e !== pos.e) continue;
       if (ignore && ignore.has(v)) continue;
       const d = (v.pos.s - pos.s) * pos.dir;
       if (d > 1e-6 && d <= span + 1e-6 && (!best || d < best.d)) best = { v, d };
@@ -1121,7 +1116,6 @@ function tryAutoCouples(t) {
 }
 
 function updateTrains(dt, now) {
-  rebuildTrackIndex();
   const advanced = new Set();
   for (const t of TRAINS) {
     const members = trainMembers(t);
@@ -1153,8 +1147,8 @@ function updateTrains(dt, now) {
           if (members.length < theirs || (members.length === theirs && t.wobPh <= other.wobPh)) {
             for (const m of members) m.pos.dir *= -1;
             t.scoot = 0.45;
+            t.headOnT = -1.5; other.headOnT = -1.5;
           }
-          t.headOnT = -1.5; other.headOnT = -1.5;
         }
       } else {
         if (t.contact !== other) { playClack(); other.scoot = 0.5; }
@@ -1237,8 +1231,12 @@ function dropDir(near) {
   return vx * tx + vy * ty >= 0 ? 1 : -1;
 }
 
-window.addEventListener("pointerup", () => {
+window.addEventListener("pointerup", (e) => {
   if (!held) return;
+  if (e.clientX != null && trackSvg.getScreenCTM()) {
+    const p = svgPoint(e);
+    pointer.x = p.x; pointer.y = p.y;
+  }
   const v = held;
   held = null;
   v.el.classList.remove("held");
@@ -1265,7 +1263,6 @@ window.addEventListener("pointerup", () => {
     const ang = mod(posAt(near.e, near.s).angle + (dir < 0 ? 180 : 0) + 180, 360) - 180;
     v.mir = Math.cos(ang * RAD) < 0 ? 1 : 0;
     v.mirA = v.mir;
-    rebuildTrackIndex();
     if (v.kind === "engine") {
       const t = makeTrain(v);
       playToot();
@@ -1330,12 +1327,18 @@ function ambientStart() {
     const eng = makeVehicle("engine", null, liveries[k]);
     const E = edgeByName(spots[k].e);
     const dir = Math.random() < 0.5 ? 1 : -1;
+    const nCars = 2 + Math.floor(Math.random() * 3);
+    // keep the whole consist on this one edge so nobody straddles a junction
+    // whose lever points somewhere else on the very first lap
+    const need = SPACING * nCars + 30;
+    let s = E.len * spots[k].f;
+    if (dir > 0) s = Math.min(E.len - 20, Math.max(s, need));
+    else s = Math.max(20, Math.min(s, E.len - need));
     eng.state = "track";
-    eng.pos = { e: E.idx, s: E.len * spots[k].f, dir };
+    eng.pos = { e: E.idx, s, dir };
     eng.facing = dir;
     const t = makeTrain(eng);
     t.ramp = 1;
-    const nCars = 2 + Math.floor(Math.random() * 3);
     for (let c = 0; c < nCars; c++) {
       const car = makeVehicle("car", animals[ai++]);
       const back = { e: eng.pos.e, s: eng.pos.s, dir: -dir };
