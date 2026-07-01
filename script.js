@@ -29,6 +29,7 @@ const BASE_SPEED = 70; // px/sec at speedFactor 1
 const HALF = 160;      // arc-length half-width of the bridge ramp (longer = gentler blend)
 const LIFT = 34;       // how high the over-pass rides above the crossing
 const OVER_LAYER_MARGIN = HALF + 90; // cover the whole car before its anchor reaches the bridge
+const FLY_HALF = 155, FLY_LIFT = 62; // the tall flyover hump that arcs over the water on one lobe
 const VB_W = 1800, VB_H = 1120;   // a good landscape rectangle with room to spread out
 
 /* ---------- Art ---------- */
@@ -287,6 +288,16 @@ function buildFigure8() {
 }
 const F8 = buildFigure8();
 
+// raised zones: the humble centre bridge (self-crossing) + a tall flyover over water on the big right lobe.
+// the flyover sits at the top of the right lobe (rightmost half of the table).
+let iFly = -1, flyMinY = 1e9;
+for (let i = 0; i < F8.NS; i++) { if (F8.pts[i].x > VB_W / 2 && F8.pts[i].y < flyMinY) { flyMinY = F8.pts[i].y; iFly = i; } }
+const LIFT_ZONES = [
+  { s: F8.sOver, half: HALF, lift: LIFT, bridge: true },
+  { s: F8.cum[iFly], half: FLY_HALF, lift: FLY_LIFT, bridge: false },
+];
+const inAnyZone = (s) => LIFT_ZONES.some(z => circDist(s, z.s, F8.totalLen) < z.half);
+
 function posAt(s) {
   const { pts, cum, NS, totalLen } = F8;
   s = mod(s, totalLen);
@@ -297,28 +308,23 @@ function posAt(s) {
   return { x: ax + (bx - ax) * f, y: ay + (by - ay) * f, angle: (Math.atan2(by - ay, bx - ax) * 180) / Math.PI };
 }
 function liftAt(s) {
-  const d = circDist(s, F8.sOver, F8.totalLen);
-  return d < HALF ? LIFT * 0.5 * (1 + Math.cos((Math.PI * d) / HALF)) : 0;
+  let m = 0;
+  for (const z of LIFT_ZONES) {
+    const d = circDist(s, z.s, F8.totalLen);
+    if (d < z.half) m = Math.max(m, z.lift * 0.5 * (1 + Math.cos((Math.PI * d) / z.half)));
+  }
+  return m;
 }
 function trackPathWithoutOverpass() {
-  const { pts, cum, NS, totalLen } = F8;
-  const start = mod(F8.sOver + HALF, totalLen);
-  const end = mod(F8.sOver - HALF, totalLen);
-  const pStart = posAt(start);
-  const parts = [`M${pStart.x.toFixed(1)},${pStart.y.toFixed(1)}`];
-  const kept = [];
+  // draw the flat track everywhere EXCEPT inside a raised zone; each gap breaks into a new sub-path
+  const { pts, cum, NS } = F8;
+  let d = "", pen = false;
   for (let i = 0; i < NS; i++) {
-    const s = cum[i];
-    const fromStart = mod(s - start, totalLen);
-    if (fromStart > 0 && fromStart < mod(end - start, totalLen)) {
-      kept.push({ p: pts[i], fromStart });
-    }
+    if (inAnyZone(cum[i])) { pen = false; continue; }
+    d += (pen ? "L" : "M") + pts[i].x.toFixed(1) + "," + pts[i].y.toFixed(1) + " ";
+    pen = true;
   }
-  kept.sort((a, b) => a.fromStart - b.fromStart);
-  kept.forEach(({ p }) => parts.push(`L${p.x.toFixed(1)},${p.y.toFixed(1)}`));
-  const pEnd = posAt(end);
-  parts.push(`L${pEnd.x.toFixed(1)},${pEnd.y.toFixed(1)}`);
-  return parts.join(" ");
+  return d.trim();
 }
 
 /* ---------- The bridge over the crossing (built once, sits between the two car layers) ---------- */
@@ -355,12 +361,54 @@ function buildBridge() {
   }
 }
 
-/* ---------- Water helper (for the flyover lake) ---------- */
+/* ---------- The flyover over the water (a raised hump on one lobe, on stilts) ---------- */
 
-function drawWaterInto(g, w) {
-  g.appendChild(mk("ellipse", { cx: w.x, cy: w.y, rx: w.rx, ry: w.ry, fill: "#3f93cf" }));
-  g.appendChild(mk("ellipse", { cx: w.x, cy: w.y, rx: w.rx, ry: w.ry, fill: "none", stroke: "#bfe6f7", "stroke-width": 3 }));
-  g.appendChild(mk("ellipse", { cx: (w.x - w.rx * 0.3).toFixed(1), cy: (w.y - w.ry * 0.32).toFixed(1), rx: (w.rx * 0.3).toFixed(1), ry: (w.ry * 0.16).toFixed(1), fill: "rgba(255,255,255,0.28)" }));
+// a genuine wiggly body of water, not a plain circle
+function drawWigglyWater(g, cx, cy, rx, ry) {
+  const N = 46, pts = [];
+  for (let i = 0; i < N; i++) {
+    const a = (i / N) * Math.PI * 2;
+    const wob = 1 + 0.11 * Math.sin(a * 3 + 0.7) + 0.07 * Math.sin(a * 5 + 2.3) + 0.04 * Math.sin(a * 8 + 1.1);
+    pts.push([cx + Math.cos(a) * rx * wob, cy + Math.sin(a) * ry * wob]);
+  }
+  const d = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ") + " Z";
+  g.appendChild(mk("path", { d, fill: "#3f93cf" }));
+  g.appendChild(mk("path", { d, fill: "none", stroke: "#bfe6f7", "stroke-width": 3 }));
+  g.appendChild(mk("ellipse", { cx: (cx - rx * 0.28).toFixed(1), cy: (cy - ry * 0.34).toFixed(1), rx: (rx * 0.3).toFixed(1), ry: (ry * 0.14).toFixed(1), fill: "rgba(255,255,255,0.28)" }));
+}
+
+function buildFlyover() {
+  const z = LIFT_ZONES.find(zz => !zz.bridge);
+  if (!z) return;
+  const ns = 44, top = [];
+  for (let k = -ns; k <= ns; k++) {
+    const s = z.s + (k / ns) * (z.half + 12), p = posAt(s), li = liftAt(s), rad = (p.angle * Math.PI) / 180;
+    top.push({ x: p.x, y: p.y - li, nx: Math.cos(rad + Math.PI / 2), ny: Math.sin(rad + Math.PI / 2), li });
+  }
+  const c = posAt(z.s);
+  // wiggly lake straddling the flyover footprint
+  drawWigglyWater(lakeLayer, c.x, c.y + 6, 205, 128);
+  // soft shadow under the raised part
+  const sh = top.filter(t => t.li > z.lift * 0.22).map(t => [t.x, t.y + t.li + 5]);
+  if (sh.length > 1) archLayer.appendChild(mk("path", { d: sh.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" "), fill: "none", stroke: "rgba(0,0,0,0.13)", "stroke-width": 42, "stroke-linecap": "round" }));
+  // stilts down into the water
+  const step = Math.max(4, Math.round(top.length / 13));
+  for (let k = 0; k < top.length; k += step) {
+    const t = top[k]; if (t.li < 8) continue;
+    archLayer.appendChild(mk("rect", { x: (t.x - 5).toFixed(1), y: t.y.toFixed(1), width: 10, height: (t.li + 12).toFixed(1), rx: 2, fill: "#8a7550" }));
+    archLayer.appendChild(mk("rect", { x: (t.x - 5).toFixed(1), y: t.y.toFixed(1), width: 4, height: (t.li + 12).toFixed(1), rx: 2, fill: "#a89268" }));
+  }
+  // raised deck — same wooden palette + ties as the track, butt caps to blend into the loop
+  const deckD = top.map((t, i) => (i ? "L" : "M") + t.x.toFixed(1) + "," + t.y.toFixed(1)).join(" ");
+  archLayer.appendChild(mk("path", { d: deckD, fill: "none", stroke: "#d8b27a", "stroke-width": 64, "stroke-linecap": "butt", "stroke-linejoin": "round" }));
+  archLayer.appendChild(mk("path", { d: deckD, fill: "none", stroke: "#8a6a3f", "stroke-width": 50, "stroke-linecap": "butt", "stroke-linejoin": "round" }));
+  archLayer.appendChild(mk("path", { d: deckD, fill: "none", stroke: "#6b4f2a", "stroke-width": 50, "stroke-linecap": "butt", "stroke-dasharray": "6 16", opacity: "0.55" }));
+  // guard rails only where it's actually up in the air
+  const rail = top.filter(t => t.li > z.lift * 0.16);
+  if (rail.length > 1) {
+    archLayer.appendChild(mk("path", { d: rail.map((t, i) => (i ? "L" : "M") + (t.x + t.nx * 25).toFixed(1) + "," + (t.y + t.ny * 25).toFixed(1)).join(" "), fill: "none", stroke: "#7a5a33", "stroke-width": 4, "stroke-linecap": "round" }));
+    archLayer.appendChild(mk("path", { d: rail.map((t, i) => (i ? "L" : "M") + (t.x - t.nx * 25).toFixed(1) + "," + (t.y - t.ny * 25).toFixed(1)).join(" "), fill: "none", stroke: "#7a5a33", "stroke-width": 4, "stroke-linecap": "round" }));
+  }
 }
 
 /* ---------- Build scene ---------- */
@@ -461,6 +509,7 @@ engine.s = startS;
 vehicles.filter((v) => v.kind === "car").forEach((v, i) => { v.s = mod(startS - (i + 1) * SPACING, F8.totalLen); });
 
 buildBridge();
+buildFlyover();
 
 /* ---------- Run state / speed ---------- */
 
