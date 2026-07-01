@@ -234,6 +234,18 @@ body[data-mode="toybox"] .deco { opacity: 0; }
 .car:active, .engine-group:active { cursor: grabbing; }
 .held { cursor: grabbing; filter: drop-shadow(0 7px 6px rgba(0,0,0,0.32)); }
 
+/* prehistoric dragonfly drifting slowly across the table, wings a-buzz */
+#meganeura { transform-box: fill-box; opacity: 0.9; pointer-events: none; animation: megaDrift 46s linear infinite; }
+@keyframes megaDrift {
+  0%   { transform: translate(-70px, 620px) rotate(-8deg); }
+  22%  { transform: translate(520px, 430px) rotate(6deg); }
+  44%  { transform: translate(1000px, 660px) rotate(-5deg); }
+  68%  { transform: translate(1480px, 380px) rotate(10deg); }
+  100% { transform: translate(1920px, 560px) rotate(-8deg); }
+}
+.mega-wings { transform-box: fill-box; transform-origin: center; animation: megaBuzz 0.16s ease-in-out infinite alternate; }
+@keyframes megaBuzz { from { transform: scaleX(0.82); } to { transform: scaleX(1); } }
+
 .blink,
 .wing,
 .tail-sway,

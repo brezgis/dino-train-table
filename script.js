@@ -669,6 +669,25 @@ const modeToggle = document.getElementById("modeToggle");
 const dragLayer = document.getElementById("dragLayer");
 buildDecor();
 buildSign();
+buildBug();
+
+// a little prehistoric giant dragonfly (Meganeura) drifting across the table now and then — my own small addition :)
+function buildBug() {
+  const g = mk("g", { id: "meganeura" });
+  g.innerHTML = `
+    <g class="mega-wings">
+      <ellipse cx="-3" cy="-10" rx="5.5" ry="15" fill="rgba(190,228,236,0.5)" stroke="#5f817d" stroke-width="0.7"></ellipse>
+      <ellipse cx="3" cy="-10" rx="5.5" ry="14" fill="rgba(190,228,236,0.5)" stroke="#5f817d" stroke-width="0.7"></ellipse>
+      <ellipse cx="-3" cy="10" rx="5.5" ry="15" fill="rgba(190,228,236,0.45)" stroke="#5f817d" stroke-width="0.7"></ellipse>
+      <ellipse cx="3" cy="10" rx="5.5" ry="14" fill="rgba(190,228,236,0.45)" stroke="#5f817d" stroke-width="0.7"></ellipse>
+    </g>
+    <rect x="-15" y="-2.2" width="30" height="4.4" rx="2.2" fill="#3a6350"></rect>
+    <circle cx="15" cy="0" r="3.6" fill="#3a6350"></circle>
+    <circle cx="16.4" cy="-1.3" r="0.9" fill="#111"></circle>
+    <circle cx="16.4" cy="1.3" r="0.9" fill="#111"></circle>
+  `;
+  trackSvg.appendChild(g);   // topmost — it flies over everything
+}
 
 /* ---------- Vehicles: the engine + every car is a pick-up-able object ---------- */
 
