@@ -1,28 +1,18 @@
 name: pages
+# GitHub Pages serves this repo from the gh-pages branch (enabling Pages on
+# main via API/UI needs permissions this repo's tokens don't have). This job
+# keeps gh-pages an exact mirror of main, so main stays the source of truth.
 on:
   push:
     branches: [main]
   workflow_dispatch:
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-concurrency:
-  group: pages
-  cancel-in-progress: true
+  contents: write
 jobs:
-  deploy:
+  sync:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
         with:
-          enablement: true
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          fetch-depth: 0
+      - run: git push --force origin HEAD:gh-pages
