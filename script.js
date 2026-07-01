@@ -19,6 +19,16 @@ const ANIMALS = [
     fact: "Ankylosaurus had a built-in bony club at the end of its tail for self-defense." },
   { id: "ptero", name: "Pterodactyl", color: "#b9ddca", note: 783.99,
     fact: "Pterodactyls weren't dinosaurs at all — they were flying reptiles." },
+  { id: "dimetrodon", name: "Dimetrodon", color: "#f0c1d2", note: 830.6,
+    fact: "Dimetrodon had a tall sail on its back that may have helped it warm up in the sun." },
+  { id: "raptor", name: "Velociraptor", color: "#9fd7b5", note: 880.0,
+    fact: "Velociraptors were about the size of a turkey, but they had sharp curved claws." },
+  { id: "parasaur", name: "Parasaurolophus", color: "#f3c26f", note: 932.3,
+    fact: "Parasaurolophus had a long hollow crest that may have made deep trumpet sounds." },
+  { id: "spino", name: "Spinosaurus", color: "#a9c8ef", note: 987.8,
+    fact: "Spinosaurus had a sail on its back and a long snout for catching fish." },
+  { id: "plesio", name: "Plesiosaur", color: "#d8c0f0", note: 1046.5,
+    fact: "Plesiosaurs were ocean reptiles with paddle-like flippers and very long necks." },
 ];
 
 const ANCHOR = { x: 70, y: 65 };
@@ -151,16 +161,77 @@ const ART = {
     <path d="M64,17 L62,23 M76,17 L78,23" stroke="#2c2418" stroke-width="4" stroke-linecap="round"></path>
     <path d="M64,17 L62,23 M76,17 L78,23" stroke="#c98a3a" stroke-width="2.2" stroke-linecap="round"></path>
   `,
+  // Dimetrodon: low sprawling body, big warm sail on the back, croc head at the front (facing left).
+  dimetrodon: () => `
+    <path d="M112,13 Q129,11 134,19" stroke="#2c2418" stroke-width="9" fill="none" stroke-linecap="round"></path>
+    <path d="M112,13 Q129,11 134,19" stroke="#7e9a52" stroke-width="6" fill="none" stroke-linecap="round"></path>
+    <ellipse cx="72" cy="14" rx="45" ry="11" fill="#7e9a52" stroke="#2c2418" stroke-width="2"></ellipse>
+    <path d="M42,9 Q56,-38 78,-41 Q100,-37 108,9 Z" fill="#e08a54" stroke="#2c2418" stroke-width="2" stroke-linejoin="round"></path>
+    <path d="M54,3 L60,-24 M68,1 L74,-35 M84,1 L86,-31 M98,4 L98,-13" stroke="#b45f3e" stroke-width="1.7" fill="none" stroke-linecap="round"></path>
+    <ellipse cx="29" cy="10" rx="15" ry="10" fill="#7e9a52" stroke="#2c2418" stroke-width="2"></ellipse>
+    <path d="M15,8 Q6,11 13,17 L27,16" fill="#7e9a52" stroke="#2c2418" stroke-width="1.8" stroke-linejoin="round"></path>
+    <path d="M16,14 l4,-0.5 M22,16 l0,-3" stroke="#fff" stroke-width="1.3" stroke-linecap="round"></path>
+    <circle cx="31" cy="6" r="2" fill="#111"></circle>
+  `,
+  // Velociraptor: compact hunter, head low and forward (facing left), stiff tail, little clawed foot.
+  raptor: () => `
+    <path d="M100,8 Q122,0 134,10" stroke="#2c2418" stroke-width="8" fill="none" stroke-linecap="round"></path>
+    <path d="M100,8 Q122,0 134,10" stroke="#8bbf7a" stroke-width="5" fill="none" stroke-linecap="round"></path>
+    <path d="M96,18 Q104,-2 86,-12 Q66,-22 46,-16 Q34,-12 34,0 Q36,10 54,14 Q78,16 96,18 Z" fill="#8bbf7a" stroke="#2c2418" stroke-width="2" stroke-linejoin="round"></path>
+    <path d="M46,-15 Q31,-16 24,-8 Q34,-6 46,-8 Z" fill="#8bbf7a" stroke="#2c2418" stroke-width="1.6" stroke-linejoin="round"></path>
+    <path d="M25,-9 l7,1" stroke="#2c2418" stroke-width="0.9" fill="none"></path>
+    <circle cx="42" cy="-11" r="2" fill="#111"></circle>
+    <path d="M60,18 q-4,6 2,11 q4,-2 3,-6" stroke="#2c2418" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+    <path d="M60,18 q-4,6 2,11 q4,-2 3,-6" stroke="#8bbf7a" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+  `,
+  // Parasaurolophus: gentle duckbill (facing left) with a long tube crest sweeping back over its neck.
+  parasaur: () => `
+    <path d="M110,13 Q127,11 133,19" stroke="#2c2418" stroke-width="9" fill="none" stroke-linecap="round"></path>
+    <path d="M110,13 Q127,11 133,19" stroke="#6aa39d" stroke-width="6" fill="none" stroke-linecap="round"></path>
+    <ellipse cx="76" cy="14" rx="40" ry="11" fill="#6aa39d" stroke="#2c2418" stroke-width="2"></ellipse>
+    <path d="M56,10 Q46,-8 52,-22 Q58,-32 46,-34" stroke="#2c2418" stroke-width="14" fill="none" stroke-linecap="round"></path>
+    <path d="M56,10 Q46,-8 52,-22 Q58,-32 46,-34" stroke="#6aa39d" stroke-width="11" fill="none" stroke-linecap="round"></path>
+    <path d="M50,-38 Q72,-46 92,-30" stroke="#2c2418" stroke-width="9" fill="none" stroke-linecap="round"></path>
+    <path d="M50,-38 Q72,-46 92,-30" stroke="#8bbcb6" stroke-width="6" fill="none" stroke-linecap="round"></path>
+    <ellipse cx="40" cy="-33" rx="14" ry="10" fill="#6aa39d" stroke="#2c2418" stroke-width="2"></ellipse>
+    <path d="M28,-35 Q18,-37 20,-30 L34,-30 Z" fill="#e0b06a" stroke="#2c2418" stroke-width="1.6" stroke-linejoin="round"></path>
+    <circle cx="38" cy="-36" r="1.9" fill="#111"></circle>
+  `,
+  // Spinosaurus: teal body, tall angular sail, a long fish-catching snout at the front (facing left).
+  spino: () => `
+    <path d="M110,13 Q127,11 133,19" stroke="#2c2418" stroke-width="9" fill="none" stroke-linecap="round"></path>
+    <path d="M110,13 Q127,11 133,19" stroke="#4e9a8a" stroke-width="6" fill="none" stroke-linecap="round"></path>
+    <ellipse cx="74" cy="14" rx="42" ry="11" fill="#4e9a8a" stroke="#2c2418" stroke-width="2"></ellipse>
+    <path d="M48,9 L62,-34 L82,-34 L98,9 Z" fill="#d66b54" stroke="#2c2418" stroke-width="2" stroke-linejoin="round"></path>
+    <path d="M60,4 L66,-26 M74,3 L76,-30 M86,4 L84,-24" stroke="#9f4639" stroke-width="1.6" fill="none" stroke-linecap="round"></path>
+    <path d="M50,10 Q40,-2 44,-14 Q48,-24 60,-23 L60,-10 Q56,4 50,10 Z" fill="#4e9a8a" stroke="#2c2418" stroke-width="2" stroke-linejoin="round"></path>
+    <path d="M44,-16 Q28,-19 16,-13 Q30,-11 45,-9 Z" fill="#4e9a8a" stroke="#2c2418" stroke-width="1.8" stroke-linejoin="round"></path>
+    <path d="M18,-13 l24,3" stroke="#2c2418" stroke-width="0.9" fill="none"></path>
+    <circle cx="50" cy="-15" r="2" fill="#111"></circle>
+  `,
+  // Plesiosaur: round sea reptile with paddle flippers and a long curving neck (head facing left).
+  plesio: () => `
+    <path d="M108,15 Q124,13 130,20" stroke="#2c2418" stroke-width="8" fill="none" stroke-linecap="round"></path>
+    <path d="M108,15 Q124,13 130,20" stroke="#4f8fbd" stroke-width="5" fill="none" stroke-linecap="round"></path>
+    <path d="M56,20 Q44,30 33,24 M92,20 Q106,30 117,24" stroke="#2c2418" stroke-width="8" fill="none" stroke-linecap="round"></path>
+    <path d="M56,20 Q44,30 33,24 M92,20 Q106,30 117,24" stroke="#5a9ccb" stroke-width="5" fill="none" stroke-linecap="round"></path>
+    <ellipse cx="74" cy="14" rx="40" ry="12" fill="#4f8fbd" stroke="#2c2418" stroke-width="2"></ellipse>
+    <path d="M52,11 Q36,-6 44,-30 Q49,-46 66,-47" stroke="#2c2418" stroke-width="13" fill="none" stroke-linecap="round"></path>
+    <path d="M52,11 Q36,-6 44,-30 Q49,-46 66,-47" stroke="#4f8fbd" stroke-width="10" fill="none" stroke-linecap="round"></path>
+    <ellipse cx="70" cy="-49" rx="13" ry="9" fill="#4f8fbd" stroke="#2c2418" stroke-width="2"></ellipse>
+    <path d="M58,-50 Q49,-51 51,-45 L64,-45 Z" fill="#4f8fbd" stroke="#2c2418" stroke-width="1.5" stroke-linejoin="round"></path>
+    <circle cx="66" cy="-51" r="1.8" fill="#111"></circle>
+  `,
 };
 
 function carInnerSVG(animal) {
   return wagonMarkup(animal.color) + ART[animal.id]();
 }
 
-function engineInnerSVG() {
+function engineInnerSVG(bodyColor = "#d6433a") {
   return `
-    <rect x="0" y="10" width="90" height="55" rx="10" fill="#d6433a" stroke="#2c2418" stroke-width="3"></rect>
-    <rect x="85" y="20" width="45" height="35" rx="14" fill="#c23a32" stroke="#2c2418" stroke-width="3"></rect>
+    <rect x="0" y="10" width="90" height="55" rx="10" fill="${bodyColor}" stroke="#2c2418" stroke-width="3"></rect>
+    <rect x="85" y="20" width="45" height="35" rx="14" fill="${bodyColor}" stroke="#2c2418" stroke-width="3"></rect>
     <rect x="96" y="-14" width="14" height="37" rx="4" fill="#3a3a3a" stroke="#2c2418" stroke-width="2"></rect>
     <ellipse cx="103" cy="-14" rx="9" ry="4" fill="#4a4a4a" stroke="#2c2418" stroke-width="2"></ellipse>
     <path d="M130,55 L148,68 L130,68 Z" fill="#3a3a3a" stroke="#2c2418" stroke-width="2"></path>
