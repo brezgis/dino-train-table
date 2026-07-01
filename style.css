@@ -199,6 +199,22 @@ body[data-mode="toybox"] .deco { opacity: 0; }
   opacity: 0.55;
 }
 
+#decorLayer {
+  pointer-events: none;
+}
+.decor-sway {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  animation: decorSway 5.8s ease-in-out infinite alternate;
+}
+.decor-grass {
+  animation-duration: 4.6s;
+}
+@keyframes decorSway {
+  from { transform: rotate(-1.2deg); }
+  to { transform: rotate(1.5deg); }
+}
+
 .car {
   cursor: pointer;
   transition: filter 0.15s ease;

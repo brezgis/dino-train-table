@@ -504,9 +504,144 @@ function buildFlyover() {
   }
 }
 
+/* ---------- Sparse prehistoric felt decor ---------- */
+
+function mulberry32(seed) {
+  return function rand() {
+    seed |= 0;
+    seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function trackClearance(x, y) {
+  let best = 1e9;
+  for (const p of F8.pts) {
+    const dx = p.x - x, dy = p.y - y;
+    const d = dx * dx + dy * dy;
+    if (d < best) best = d;
+  }
+  return Math.sqrt(best);
+}
+function lakeClear(x, y, pad = 0) {
+  const z = LIFT_ZONES.find(zz => !zz.bridge);
+  if (!z) return true;
+  const c = posAt(z.s);
+  const dx = (x - c.x) / (225 + pad);
+  const dy = (y - (c.y + 6)) / (145 + pad);
+  return dx * dx + dy * dy > 1;
+}
+function feltClear(x, y, radius = 0) {
+  return x > 80 + radius && x < VB_W - 80 - radius &&
+    y > 80 + radius && y < VB_H - 70 - radius &&
+    trackClearance(x, y) > 58 + radius &&
+    lakeClear(x, y, 36 + radius);
+}
+function footprintClear(x, y, w, h, pad = 0) {
+  const pts = [
+    [x, y], [x + w, y], [x, y + h], [x + w, y + h],
+    [x + w * 0.5, y], [x + w * 0.5, y + h],
+    [x, y + h * 0.5], [x + w, y + h * 0.5],
+  ];
+  return pts.every(([px, py]) => feltClear(px, py, pad));
+}
+function addFern(parent, x, y, scale, delay) {
+  const g = mk("g", { transform: `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${scale.toFixed(2)})` });
+  const sway = mk("g", { class: "decor-sway", style: `animation-delay:${delay.toFixed(2)}s` });
+  sway.appendChild(mk("path", { d: "M0,0 C-10,-20 -10,-35 -4,-50", fill: "none", stroke: "#446f45", "stroke-width": 4, "stroke-linecap": "round" }));
+  sway.appendChild(mk("path", { d: "M0,0 C11,-20 12,-34 6,-48", fill: "none", stroke: "#587c47", "stroke-width": 4, "stroke-linecap": "round" }));
+  sway.appendChild(mk("path", { d: "M-3,-18 l-13,-7 M-5,-27 l-12,-4 M-5,-36 l-10,-2 M5,-17 l14,-7 M7,-27 l13,-4 M7,-36 l10,-2", fill: "none", stroke: "#6f8f50", "stroke-width": 3, "stroke-linecap": "round" }));
+  g.appendChild(sway);
+  parent.appendChild(g);
+}
+function addGrass(parent, x, y, scale, delay) {
+  const g = mk("g", { transform: `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${scale.toFixed(2)})` });
+  const sway = mk("g", { class: "decor-sway decor-grass", style: `animation-delay:${delay.toFixed(2)}s` });
+  sway.appendChild(mk("path", { d: "M0,0 C-5,-16 -3,-27 2,-38 M0,0 C6,-17 10,-27 17,-34 M0,0 C-12,-12 -16,-20 -15,-29 M0,0 C3,-10 3,-20 -2,-31", fill: "none", stroke: "#6d8446", "stroke-width": 4, "stroke-linecap": "round" }));
+  g.appendChild(sway);
+  parent.appendChild(g);
+}
+function addBoulder(parent, x, y, scale) {
+  const g = mk("g", { transform: `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${scale.toFixed(2)})` });
+  g.appendChild(mk("ellipse", { cx: 0, cy: 0, rx: 24, ry: 14, fill: "rgba(43,54,37,0.12)" }));
+  g.appendChild(mk("path", { d: "M-25,2 Q-17,-20 7,-18 Q28,-14 30,5 Q19,18 -9,17 Q-25,14 -25,2 Z", fill: "#7f8262", stroke: "#677052", "stroke-width": 2 }));
+  g.appendChild(mk("path", { d: "M-10,-12 Q2,-18 16,-9", fill: "none", stroke: "#a4a77c", "stroke-width": 3, "stroke-linecap": "round", opacity: "0.55" }));
+  parent.appendChild(g);
+}
+function addFlower(parent, x, y, scale) {
+  const g = mk("g", { transform: `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${scale.toFixed(2)})` });
+  g.appendChild(mk("path", { d: "M0,0 C0,-9 1,-16 3,-24", fill: "none", stroke: "#597043", "stroke-width": 2.5, "stroke-linecap": "round" }));
+  for (const a of [0, 72, 144, 216, 288]) {
+    const rad = (a * Math.PI) / 180;
+    g.appendChild(mk("ellipse", { cx: (3 + Math.cos(rad) * 5).toFixed(1), cy: (-27 + Math.sin(rad) * 5).toFixed(1), rx: 3.8, ry: 2.8, fill: "#d59670", transform: `rotate(${a} 3 -27)` }));
+  }
+  g.appendChild(mk("circle", { cx: 3, cy: -27, r: 2.4, fill: "#d4b45c" }));
+  parent.appendChild(g);
+}
+function addBone(parent, x, y, scale) {
+  const g = mk("g", { transform: `translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(-13) scale(${scale.toFixed(2)})` });
+  g.appendChild(mk("path", { d: "M-26,0 L24,0", fill: "none", stroke: "#d9cfaa", "stroke-width": 10, "stroke-linecap": "round" }));
+  for (const cx of [-30, 30]) {
+    g.appendChild(mk("circle", { cx, cy: -5, r: 7, fill: "#d9cfaa" }));
+    g.appendChild(mk("circle", { cx, cy: 5, r: 7, fill: "#d9cfaa" }));
+  }
+  g.appendChild(mk("path", { d: "M-22,4 Q0,14 22,4", fill: "none", stroke: "#8a7d5d", "stroke-width": 2, "stroke-linecap": "round", opacity: "0.35" }));
+  parent.appendChild(g);
+}
+function addAmmonite(parent, x, y, scale) {
+  const g = mk("g", { transform: `translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(9) scale(${scale.toFixed(2)})` });
+  g.appendChild(mk("circle", { cx: 0, cy: 0, r: 18, fill: "#b39a6f", stroke: "#7f6a4d", "stroke-width": 2 }));
+  g.appendChild(mk("path", { d: "M8,1 C8,-8 -4,-11 -10,-4 C-18,6 -4,18 8,11 C18,4 16,-13 1,-18", fill: "none", stroke: "#6f5e46", "stroke-width": 3, "stroke-linecap": "round" }));
+  g.appendChild(mk("path", { d: "M-3,-15 l4,9 M7,-11 l-7,8 M12,-2 l-10,2 M8,8 l-8,-5", fill: "none", stroke: "#d6c298", "stroke-width": 1.6, "stroke-linecap": "round" }));
+  parent.appendChild(g);
+}
+function buildDecor() {
+  const rand = mulberry32(19570612);
+  const makers = ["fern", "grass", "grass", "boulder", "fern", "flower", "grass", "boulder", "fern", "grass", "flower", "grass", "ammonite", "fern", "bone"];
+  const placed = [];
+  for (let i = 0, attempts = 0; i < makers.length && attempts < 500; attempts++) {
+    const x = 130 + rand() * (VB_W - 260);
+    const y = 175 + rand() * (VB_H - 280);
+    const r = makers[i] === "boulder" ? 34 : 24;
+    if (!feltClear(x, y, r)) continue;
+    if (placed.some(p => Math.hypot(p.x - x, p.y - y) < p.r + r + 42)) continue;
+    placed.push({ x, y, r });
+    const sc = 0.58 + rand() * 0.34;
+    const delay = -rand() * 6;
+    if (makers[i] === "fern") addFern(decorLayer, x, y, sc, delay);
+    else if (makers[i] === "grass") addGrass(decorLayer, x, y, sc, delay);
+    else if (makers[i] === "boulder") addBoulder(decorLayer, x, y, sc);
+    else if (makers[i] === "flower") addFlower(decorLayer, x, y, sc);
+    else if (makers[i] === "bone") addBone(decorLayer, x, y, sc);
+    else addAmmonite(decorLayer, x, y, sc);
+    i++;
+  }
+}
+function buildSign() {
+  const x = 322, y = 595, w = 185, h = 88;
+  if (!footprintClear(x - 16, y - 26, w + 32, h + 70, 20)) return;
+  const g = mk("g", { transform: `translate(${x},${y})` });
+  g.appendChild(mk("ellipse", { cx: w / 2, cy: h + 46, rx: 82, ry: 14, fill: "rgba(43,54,37,0.13)" }));
+  g.appendChild(mk("rect", { x: 30, y: h - 3, width: 10, height: 57, rx: 2, fill: "#806846" }));
+  g.appendChild(mk("rect", { x: w - 40, y: h - 3, width: 10, height: 57, rx: 2, fill: "#806846" }));
+  g.appendChild(mk("rect", { x: 0, y: 0, width: w, height: h, rx: 14, fill: "#f5e7bf", stroke: "#8d6745", "stroke-width": 5 }));
+  g.appendChild(mk("rect", { x: 11, y: 12, width: w - 22, height: h - 24, rx: 9, fill: "none", stroke: "#3f9392", "stroke-width": 4 }));
+  g.appendChild(mk("path", { d: `M18,22 L47,22 L31,40 L55,40`, fill: "none", stroke: "#d46f55", "stroke-width": 5, "stroke-linecap": "round", "stroke-linejoin": "round" }));
+  g.appendChild(mk("path", { d: `M${w - 43},20 l7,13 l15,2 l-11,10 l3,15 l-14,-7 l-13,8 l2,-15 l-11,-10 l15,-3 Z`, fill: "#d5a84c", stroke: "#a57936", "stroke-width": 2 }));
+  const t1 = mk("text", { x: w / 2, y: 47, "text-anchor": "middle", fill: "#315f61", "font-size": 26, "font-weight": 800, "font-family": "Avenir Next, Segoe UI, sans-serif" });
+  t1.textContent = "DINO";
+  const t2 = mk("text", { x: w / 2, y: 70, "text-anchor": "middle", fill: "#c75f4b", "font-size": 22, "font-weight": 800, "font-family": "Avenir Next, Segoe UI, sans-serif" });
+  t2.textContent = "JUNCTION";
+  g.appendChild(t1);
+  g.appendChild(t2);
+  decorLayer.appendChild(g);
+}
+
 /* ---------- Build scene ---------- */
 
 const lakeLayer = document.getElementById("lakeLayer");
+const decorLayer = document.getElementById("decorLayer");
 const archLayer = document.getElementById("archLayer");
 const trackBallast = document.getElementById("trackBallast");
 const trackPathEl = document.getElementById("trackPath");
@@ -530,6 +665,8 @@ const shuffleBtn = document.getElementById("shuffleBtn");
 const modeToggle = document.getElementById("modeToggle");
 
 const dragLayer = document.getElementById("dragLayer");
+buildDecor();
+buildSign();
 
 /* ---------- Vehicles: the engine + every car is a pick-up-able object ---------- */
 
