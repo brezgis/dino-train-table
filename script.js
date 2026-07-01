@@ -412,9 +412,11 @@ function trackPathWithoutOverpass() {
   // draw the flat track everywhere EXCEPT inside a raised zone; each gap breaks into a new sub-path
   const { pts, cum, NS } = F8;
   let d = "", pen = false;
-  for (let i = 0; i < NS; i++) {
-    if (inAnyZone(cum[i])) { pen = false; continue; }
-    d += (pen ? "L" : "M") + pts[i].x.toFixed(1) + "," + pts[i].y.toFixed(1) + " ";
+  for (let i = 0; i <= NS; i++) {
+    const idx = i % NS;
+    const s = i === NS ? F8.totalLen : cum[i];
+    if (inAnyZone(s)) { pen = false; continue; }
+    d += (pen ? "L" : "M") + pts[idx].x.toFixed(1) + "," + pts[idx].y.toFixed(1) + " ";
     pen = true;
   }
   return d.trim();
