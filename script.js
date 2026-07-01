@@ -232,8 +232,8 @@ function mk(tag, attrs) { const e = document.createElementNS(SVG_NS, tag); for (
 
 // control points in design space; the closed Catmull-Rom spline through them self-crosses once
 const CTRL = [
-  { x: 585, y: 150 }, { x: 800, y: 140 }, { x: 935, y: 300 }, { x: 775, y: 460 }, { x: 570, y: 420 },
-  { x: 435, y: 200 }, { x: 250, y: 210 }, { x: 140, y: 325 }, { x: 265, y: 445 }, { x: 455, y: 415 },
+  { x: 600, y: 130 }, { x: 830, y: 120 }, { x: 970, y: 320 }, { x: 800, y: 540 }, { x: 590, y: 480 },
+  { x: 430, y: 175 }, { x: 230, y: 195 }, { x: 120, y: 340 }, { x: 250, y: 505 }, { x: 450, y: 470 },
 ];
 function catmull(ctrl, per) {
   const out = [], n = ctrl.length;
@@ -260,7 +260,7 @@ function buildFigure8() {
   const raw = catmull(CTRL, 42);
   let mnx = 1e9, mny = 1e9, mxx = -1e9, mxy = -1e9;
   for (const p of raw) { if (p.x < mnx) mnx = p.x; if (p.x > mxx) mxx = p.x; if (p.y < mny) mny = p.y; if (p.y > mxy) mxy = p.y; }
-  const mgx = 250, MG_TOP = 190, MG_BOT = 150, bw = mxx - mnx, bh = mxy - mny;
+  const mgx = 110, MG_TOP = 215, MG_BOT = 95, bw = mxx - mnx, bh = mxy - mny;   // fill most of the table, headroom up top for the flyover
   const iw = VB_W - 2 * mgx, ih = VB_H - MG_TOP - MG_BOT, sc = Math.min(iw / bw, ih / bh);
   const padX = (iw - bw * sc) / 2, padY = (ih - bh * sc) / 2, NS = raw.length;
   const pts = raw.map(p => ({ x: mgx + padX + (p.x - mnx) * sc, y: MG_TOP + padY + (p.y - mny) * sc }));
