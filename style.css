@@ -42,11 +42,16 @@ body[data-mode="dino"] .topbar h1 {
 
 .table-wrap {
   position: relative;
-  max-width: min(1500px, 148vh);   /* cap by viewport height too — the world is taller now (1600x1240) */
-  margin: 1rem auto 0;
-  border-radius: 28px;
+  max-width: min(1500px, 140vh);
+  margin: 1.4rem auto 0;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.18), inset 0 0 0 8px rgba(255,255,255,0.35);
+  /* a real wooden table frame: thick brown border, darker inner rim, soft inner shadow */
+  border: 18px solid #7c4a25;
+  box-shadow:
+    0 16px 40px rgba(0,0,0,0.30),
+    inset 0 0 0 3px #5f3717,
+    inset 0 0 20px rgba(0,0,0,0.18);
   background: #8fcf6b;
   transition: background 0.8s ease;
 }
