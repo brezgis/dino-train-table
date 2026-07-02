@@ -1049,18 +1049,31 @@ function buildMountain() {
     g.appendChild(mk("rect", { x: -4.5, y: -39, width: 9, height: 78, rx: 4, fill: "#8d6745", stroke: "#5f3717", "stroke-width": 2 }));
     mountainLayer.appendChild(g);
   }
-  // the summit is a crater: this mountain is the volcano, napping
-  const vx = c.x + 30, vy = c.y - 38;
-  mountainLayer.appendChild(mk("ellipse", { cx: vx, cy: vy, rx: 24, ry: 9, fill: "#4a3a2c", stroke: "#3a2d21", "stroke-width": 2.5 }));
-  mountainLayer.appendChild(mk("ellipse", { cx: vx, cy: vy, rx: 13, ry: 4.6, fill: "#b4502e" }));
-  mountainLayer.appendChild(mk("ellipse", { cx: vx - 3, cy: vy - 0.5, rx: 5, ry: 1.9, fill: "#e8792f" }));
-  VOLCANO.x = vx; VOLCANO.y = vy; VOLCANO.tipY = vy - 4; VOLCANO.ok = true;
   placedDecor.push({ x: c.x, y: c.y, r: Math.max(rx, ry) * 0.9 });
 }
 
-/* ---------- The crater (the mountain IS the volcano, napping) ---------- */
+/* ---------- The volcano (gently active) ---------- */
 
 const VOLCANO = { x: 0, y: 0, tipY: 0, ok: false, t: 9 };
+function buildVolcano() {
+  const spots = [[452, 692], [1340, 328], [962, 116]];
+  let sx = -1, sy = -1;
+  for (const [cx, cy] of spots) {
+    if (feltClear(cx, cy, 50) && !placedDecor.some((p) => Math.hypot(p.x - cx, p.y - cy) < p.r + 70)) { sx = cx; sy = cy; break; }
+  }
+  if (sx < 0) return;
+  const g = mk("g", { transform: `translate(${sx},${sy})` });
+  g.appendChild(mk("ellipse", { cx: 0, cy: 52, rx: 74, ry: 13, fill: "rgba(43,54,37,0.14)" }));
+  g.appendChild(mk("path", { d: "M-70,50 Q-50,14 -30,-16 Q-15,-31 0,-31 Q15,-31 30,-16 Q50,14 70,50 Q36,58 0,58 Q-36,58 -70,50 Z", fill: "#7c4b3b", stroke: "#5f382c", "stroke-width": 2.5, "stroke-linejoin": "round" }));
+  g.appendChild(mk("path", { d: "M-30,8 Q-22,-8 -12,-20 M0,-24 Q-2,-6 0,8 M30,8 Q22,-8 12,-20", fill: "none", stroke: "#93604c", "stroke-width": 3.5, "stroke-linecap": "round", opacity: "0.8" }));
+  g.appendChild(mk("ellipse", { cx: 0, cy: -31, rx: 22, ry: 7.5, fill: "#4a2c24", stroke: "#3a211b", "stroke-width": 2 }));
+  g.appendChild(mk("ellipse", { cx: 0, cy: -31, rx: 12, ry: 4, fill: "#b4502e" }));
+  g.appendChild(mk("ellipse", { cx: 0, cy: -31.5, rx: 4.5, ry: 1.7, fill: "#e8792f" }));
+  addBoulder(decorLayer, sx - 60, sy + 44, 0.5);
+  decorLayer.appendChild(g);
+  placedDecor.push({ x: sx, y: sy, r: 90 });
+  VOLCANO.x = sx; VOLCANO.y = sy; VOLCANO.tipY = sy - 34; VOLCANO.ok = true;
+}
 function volcanoPuff() {
   for (let i = 0; i < 4; i++) {
     setTimeout(() => {
@@ -1069,12 +1082,12 @@ function volcanoPuff() {
       smokeLayer.appendChild(el);
       puffs.push({
         el,
-        x: VOLCANO.x + (Math.random() - 0.5) * 14,
+        x: VOLCANO.x + (Math.random() - 0.5) * 12,
         y: VOLCANO.tipY,
-        r: 10 + Math.random() * 6,
+        r: 8 + Math.random() * 5,
         o: 0.55,
         vx: (Math.random() - 0.5) * 7,
-        vy: -15 - Math.random() * 7,
+        vy: -13 - Math.random() * 7,
         gr: 9,
       });
     }, i * 240);
@@ -1222,12 +1235,14 @@ function buildTray() {
   trayLayer.appendChild(mk("rect", { x: x0 + 20, y: y0 + 22, width: x1 - x0 - 40, height: 130, rx: 10, fill: "#966639", stroke: "#5f3717", "stroke-width": 3, opacity: "0.9" }));
   // car bin
   trayLayer.appendChild(mk("rect", { x: x0 + 20, y: y0 + 168, width: x1 - x0 - 40, height: y1 - y0 - 210, rx: 10, fill: "#966639", stroke: "#5f3717", "stroke-width": 3, opacity: "0.9" }));
-  const cxA = x0 + 96, cxB = x0 + 258;
   const rnd = mulberry32(99173);
   for (let i = 0; i < 3; i++) ENGINE_SLOTS.push({ x: x0 + 66 + i * 106, y: y0 + 92, rot: rnd() * 8 - 4, sc: 0.6, v: null });
-  for (let r = 0; r < 8; r++) {
-    CAR_SLOTS.push({ x: cxA + rnd() * 14 - 7, y: y0 + 224 + r * 104 + rnd() * 10 - 5, rot: rnd() * 18 - 9, sc: 0.62, v: null });
-    CAR_SLOTS.push({ x: cxB + rnd() * 14 - 7, y: y0 + 224 + r * 104 + rnd() * 10 - 5, rot: rnd() * 18 - 9, sc: 0.62, v: null });
+  // three columns of jumble: room for every car and every figurine at once
+  const cxs = [x0 + 66, x0 + 172, x0 + 278];
+  for (let r = 0; r < 9; r++) {
+    for (const cx of cxs) {
+      CAR_SLOTS.push({ x: cx + rnd() * 12 - 6, y: y0 + 214 + r * 88 + rnd() * 10 - 5, rot: rnd() * 20 - 10, sc: 0.52, v: null });
+    }
   }
 }
 function takeSlot(v) {
@@ -1326,6 +1341,65 @@ const FIGURES = [
       </g>
     `,
   },
+  {
+    id: "proto", name: "Protoceratops", note: 293.7,
+    fact: "Protoceratops was the size of a sheep — its fossils may have started the legend of the griffin.",
+    anchor: { x: 38, y: 30 },
+    art: `
+      <path d="M58,20 Q70,14 75,20" stroke="#2c2418" stroke-width="7" fill="none" stroke-linecap="round"></path>
+      <path d="M58,20 Q70,14 75,20" stroke="#c9a06a" stroke-width="4.4" fill="none" stroke-linecap="round"></path>
+      <ellipse cx="40" cy="24" rx="20" ry="12" fill="#c9a06a" stroke="#2c2418" stroke-width="2"></ellipse>
+      <rect x="30" y="32" width="7" height="12" rx="3" fill="#b8905c" stroke="#2c2418" stroke-width="1.5"></rect>
+      <rect x="48" y="32" width="7" height="12" rx="3" fill="#b8905c" stroke="#2c2418" stroke-width="1.5"></rect>
+      <g class="fig-peck">
+        <ellipse cx="26" cy="10" rx="11" ry="10" fill="#d9b57e" stroke="#2c2418" stroke-width="1.8"></ellipse>
+        <ellipse cx="18" cy="16" rx="9" ry="7" fill="#c9a06a" stroke="#2c2418" stroke-width="1.8"></ellipse>
+        <path d="M11,14 L4,18 L12,21 Z" fill="#a8763d" stroke="#2c2418" stroke-width="1.3" stroke-linejoin="round"></path>
+        <circle class="blink" cx="16" cy="13" r="1.5" fill="#111"></circle>
+      </g>
+    `,
+  },
+  {
+    id: "ovi", name: "Oviraptor", note: 622.3,
+    fact: "Oviraptor was blamed as an egg thief for seventy years — until one was found gently brooding its own nest.",
+    anchor: { x: 30, y: 28 },
+    art: `
+      <ellipse cx="30" cy="30" rx="24" ry="9" fill="#b09a6a" stroke="#8a7048" stroke-width="2"></ellipse>
+      <path d="M12,27 l6,-3 M22,32 l5,-4 M38,32 l5,-3 M46,27 l-6,-3" stroke="#8a7048" stroke-width="1.6" stroke-linecap="round"></path>
+      <circle cx="17" cy="25" r="4" fill="#f2ead0" stroke="#c9b48c" stroke-width="1.3"></circle>
+      <circle cx="44" cy="25" r="4" fill="#f2ead0" stroke="#c9b48c" stroke-width="1.3"></circle>
+      <ellipse cx="30" cy="17" rx="13" ry="10" fill="#d98a68" stroke="#2c2418" stroke-width="2"></ellipse>
+      <path d="M42,14 q10,-5 15,0 M42,17 q10,-1 14,4" stroke="#2c2418" stroke-width="4.6" fill="none" stroke-linecap="round"></path>
+      <path d="M42,14 q10,-5 15,0 M42,17 q10,-1 14,4" stroke="#c1704f" stroke-width="2.6" fill="none" stroke-linecap="round"></path>
+      <g class="fig-peck">
+        <path d="M22,11 Q18,4 19,-1" stroke="#2c2418" stroke-width="6" fill="none" stroke-linecap="round"></path>
+        <path d="M22,11 Q18,4 19,-1" stroke="#d98a68" stroke-width="3.8" fill="none" stroke-linecap="round"></path>
+        <circle cx="19" cy="-4" r="5.5" fill="#d98a68" stroke="#2c2418" stroke-width="1.7"></circle>
+        <path d="M17,-11 q2,-4 6,-3" stroke="#b4502e" stroke-width="3.4" fill="none" stroke-linecap="round"></path>
+        <path d="M14,-5 L8,-3 L14,0 Z" fill="#e0b06a" stroke="#2c2418" stroke-width="1.2" stroke-linejoin="round"></path>
+        <circle class="blink" cx="20" cy="-6" r="1.4" fill="#111"></circle>
+      </g>
+    `,
+  },
+  {
+    id: "brachy", name: "Brachiosaurus (hatchling)", note: 174.6,
+    fact: "Brachiosaurus stood tall as a four-story building, neck up like a giraffe. This one is still working on it.",
+    anchor: { x: 34, y: 34 },
+    art: `
+      <path d="M50,26 Q62,22 67,28" stroke="#2c2418" stroke-width="6.5" fill="none" stroke-linecap="round"></path>
+      <path d="M50,26 Q62,22 67,28" stroke="#8fb5c9" stroke-width="4" fill="none" stroke-linecap="round"></path>
+      <ellipse cx="37" cy="30" rx="17" ry="10" fill="#8fb5c9" stroke="#2c2418" stroke-width="2"></ellipse>
+      <rect x="28" y="36" width="7" height="11" rx="3" fill="#7da3b8" stroke="#2c2418" stroke-width="1.5"></rect>
+      <rect x="43" y="36" width="7" height="11" rx="3" fill="#7da3b8" stroke="#2c2418" stroke-width="1.5"></rect>
+      <g class="neck-sway">
+        <path d="M27,26 Q20,4 25,-16" stroke="#2c2418" stroke-width="9" fill="none" stroke-linecap="round"></path>
+        <path d="M27,26 Q20,4 25,-16" stroke="#8fb5c9" stroke-width="6.4" fill="none" stroke-linecap="round"></path>
+        <ellipse cx="26" cy="-20" rx="7.5" ry="6" fill="#8fb5c9" stroke="#2c2418" stroke-width="1.7"></ellipse>
+        <path d="M22,-25 q3,-3 7,-2" stroke="#7da3b8" stroke-width="3" fill="none" stroke-linecap="round"></path>
+        <circle class="blink" cx="23" cy="-21" r="1.5" fill="#111"></circle>
+      </g>
+    `,
+  },
 ];
 
 function makeFigure(def) {
@@ -1346,8 +1420,11 @@ function makeFigure(def) {
 function placeFigures() {
   const clearSpot = (x, y) =>
     feltClear(x, y, 48) && !placedDecor.some((p) => Math.hypot(p.x - x, p.y - y) < p.r + 54);
+  // a couple of wild ones start out grazing; the rest wait in the toy box
+  const wild = new Set(shuffled(FIGURES).slice(0, 2));
   for (const def of FIGURES) {
     const v = makeFigure(def);
+    if (!wild.has(def)) { takeSlot(v); continue; }
     let ok = false;
     for (let tries = 0; tries < 220 && !ok; tries++) {
       const x = 150 + Math.random() * (TABLE_W - 320), y = 150 + Math.random() * (VB_H - 300);
@@ -1400,7 +1477,8 @@ function positionVehicle(v, dt) {
     psi = v.mirA >= 0.5 ? 180 : 0;
     targetParent = dragLayer;
   } else if (v.state === "tray") {
-    x = v.slot.x; y = v.slot.y; sc = v.slot.sc;
+    x = v.slot.x; y = v.slot.y;
+    sc = v.slot.sc * (v.kind === "figure" ? 1.2 : 1);   // figurines are small to begin with
     psi = (v.mirA >= 0.5 ? 180 : 0) + v.slot.rot;
     targetParent = trayLayer;
   } else {
@@ -1693,7 +1771,14 @@ window.addEventListener("pointerup", (e) => {
   }
   v.el.classList.remove("held");
   if (v.kind === "figure") {
-    // wild dinos live on the felt: keep them off the rails and out of the tray
+    // wild dinos stash in the toy box like anything else...
+    if (pointer.x > TRAY_X - 30) {
+      takeSlot(v);
+      v.mir = 0; v.mirA = 0;
+      playClunk();
+      return;
+    }
+    // ...but on the table they live on the felt: keep them off the rails
     let x = Math.min(pointer.x, TRAY_X - 80), y = Math.max(95, Math.min(VB_H - 75, pointer.y));
     if (trackClearance(x, y) < 56 || !lakeClear(x, y, 14)) {
       outer:
@@ -1857,6 +1942,7 @@ buildPlatform();
 buildLevers();
 buildSign();
 buildMountain();
+buildVolcano();
 buildDigSite();
 buildGroves();
 buildDecor();
