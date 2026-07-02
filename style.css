@@ -3,19 +3,34 @@
 html, body {
   margin: 0;
   padding: 0;
-  font-family: "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
-  color: #3a2e26;
-  min-height: 100vh;
+  height: 100%;
+  overflow: hidden;    /* you're at the table; there is nowhere to scroll to */
+}
+
+html {
   /* a warm playroom floor for the table to sit on — no sky, this is indoors */
-  background:
+  background-color: #ddc6a2;
+  background-image:
     radial-gradient(ellipse at 50% 20%, rgba(255, 244, 220, 0.55), rgba(0, 0, 0, 0) 60%),
     linear-gradient(180deg, #e8d5b5 0%, #dcc4a0 100%);
+  background-attachment: fixed;
+}
+
+body {
+  font-family: "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color: #3a2e26;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
 }
 
 .table-wrap {
   position: relative;
-  max-width: min(1720px, 172vh);
-  margin: 1.6rem auto;
+  /* fill the window but never spill: capped by width and by height-derived width
+     (table aspect ratio incl. frame ≈ 1.9), leaving room for the caption line */
+  width: min(1720px, 96vw, calc((100svh - 4.6rem) * 1.9));
   border-radius: 14px;
   overflow: hidden;
   /* the wooden table frame: thick brown border, darker inner rim, soft inner shadow */
@@ -34,6 +49,24 @@ html, body {
   height: auto;
   touch-action: none;
 }
+
+/* the little label below the table — empty until a hand picks something up */
+#caption {
+  height: 1.6rem;
+  line-height: 1.6rem;
+  font-size: clamp(0.85rem, 1.6vw, 1.05rem);
+  font-style: italic;
+  color: #6b5233;
+  text-align: center;
+  padding: 0 1rem;
+  max-width: 90vw;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+#caption.show { opacity: 1; transition: opacity 0.25s ease; }
 
 .track-ballast {
   fill: none;

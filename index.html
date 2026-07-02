@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dino Junction</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦕</text></svg>">
-<link rel="stylesheet" href="style.css?v=24">
+<link rel="stylesheet" href="style.css?v=25">
 </head>
 <body>
 
   <main class="table-wrap">
-    <svg id="trackSvg" viewBox="0 0 2160 1120" xmlns="http://www.w3.org/2000/svg">
+    <svg id="trackSvg" viewBox="0 0 2160 1120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
       <g id="lakeLayer"></g>
       <g id="decorLayer"></g>
       <path id="trackBallast" class="track-ballast" d=""></path>
@@ -28,6 +28,8 @@
     </svg>
   </main>
 
-  <script src="script.js?v=24" defer></script>
+  <div id="caption" aria-live="polite"></div>
+
+  <script src="script.js?v=25" defer></script>
 </body>
 </html>

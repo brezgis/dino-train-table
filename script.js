@@ -448,10 +448,26 @@ function findCrossing() {
 }
 const CROSS = findCrossing();
 if (CROSS) {
-  edgeByName("dive").zones.push({ s: CROSS.sDive, half: 200, lift: 16, kind: "cause" });
   edgeByName("climb").zones.push({ s: CROSS.sClimb, half: 200, lift: 54, kind: "fly" });
 }
-const LAKE = CROSS ? { x: CROSS.x, y: CROSS.y + 4, rx: 198, ry: 122 } : { x: 900, y: 500, rx: 190, ry: 120 };
+
+/* the water sits under the left loop and runs off the table edge, cut off by
+   the frame — the outer track crosses it on a low causeway */
+const LAKE = { x: 132, y: 452, rx: 256, ry: 204 };
+(function waterZone() {
+  const E = edgeByName("left");
+  const inside = (p) => {
+    const dx = (p.x - LAKE.x) / (LAKE.rx + 6), dy = (p.y - LAKE.y) / (LAKE.ry + 6);
+    return dx * dx + dy * dy < 1;
+  };
+  let s0 = -1, s1 = -1;
+  for (let i = 0; i < E.pts.length; i++) {
+    if (inside(E.pts[i])) { if (s0 < 0) s0 = E.cum[i]; s1 = E.cum[i]; }
+  }
+  if (s0 < 0) return;
+  const lo = Math.max(60, s0 - 55), hi = Math.min(E.len - 60, s1 + 55);
+  if (hi > lo) E.zones.push({ s: (lo + hi) / 2, half: (hi - lo) / 2, lift: 20, kind: "cause" });
+})();
 /*GEOM-END*/
 
 /* ---------- Moving along the network ---------- */
@@ -670,19 +686,20 @@ function deckPath(edge, zone, ns) {
 }
 const dstr = (a) => a.map((p, i) => (i ? "L" : "M") + p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" ");
 
-// the low wooden causeway that carries the dive across the water
+// the low wooden causeways: wherever a track crosses the water
 function buildCauseway() {
-  const E = edgeByName("dive"), z = E.zones.find((zz) => zz.kind === "cause");
-  if (!z) return;
+  for (const E of EDGES) for (const z of E.zones) if (z.kind === "cause") buildCausewayFor(E, z);
+}
+function buildCausewayFor(E, z) {
   const top = deckPath(E, z, 30);
   const sh = top.filter((t) => t.li > z.lift * 0.2).map((t) => ({ x: t.x, y: t.y + t.li + 4 }));
   if (sh.length > 1) archLayer.appendChild(mk("path", { d: dstr(sh), fill: "none", stroke: "rgba(20,40,60,0.18)", "stroke-width": 44, "stroke-linecap": "round" }));
-  const step = Math.max(3, Math.round(top.length / 16));
+  const step = Math.max(3, Math.round(top.length / 18));
   for (let k = 0; k < top.length; k += step) {
     const t = top[k]; if (t.li < 3) continue;
-    for (const off of [-19, 19]) {
-      archLayer.appendChild(mk("rect", { x: (t.x + t.nx * off - 4.5).toFixed(1), y: (t.y + t.ny * off).toFixed(1), width: 9, height: (t.li + 10).toFixed(1), rx: 2, fill: "#8a7550" }));
-      archLayer.appendChild(mk("rect", { x: (t.x + t.nx * off - 4.5).toFixed(1), y: (t.y + t.ny * off).toFixed(1), width: 3.5, height: (t.li + 10).toFixed(1), rx: 2, fill: "#a89268" }));
+    for (const off of [-29, 29]) {
+      archLayer.appendChild(mk("rect", { x: (t.x + t.nx * off - 5).toFixed(1), y: (t.y + t.ny * off).toFixed(1), width: 10, height: (t.li + 16).toFixed(1), rx: 2, fill: "#8a7550" }));
+      archLayer.appendChild(mk("rect", { x: (t.x + t.nx * off - 5).toFixed(1), y: (t.y + t.ny * off).toFixed(1), width: 4, height: (t.li + 16).toFixed(1), rx: 2, fill: "#a89268" }));
     }
   }
   const d = dstr(top);
@@ -705,8 +722,11 @@ function buildFlyover() {
   const sh = top.filter((t) => t.li > z.lift * 0.18).map((t) => ({ x: t.x, y: t.y + t.li + 6 }));
   if (sh.length > 1) archLayer.appendChild(mk("path", { d: dstr(sh), fill: "none", stroke: "rgba(0,0,0,0.16)", "stroke-width": 46, "stroke-linecap": "round" }));
   const step = Math.max(4, Math.round(top.length / 15));
+  const dive = edgeByName("dive");
+  const onDive = (x, y) => dive.pts.some((p, i) => i % 2 === 0 && Math.hypot(p.x - x, p.y - y) < 48);
   for (let k = 0; k < top.length; k += step) {
     const t = top[k]; if (t.li < 8) continue;
+    if (onDive(t.x, t.y + t.li)) continue;   // no post stands on the track below
     archLayer.appendChild(mk("rect", { x: (t.x - 5).toFixed(1), y: t.y.toFixed(1), width: 10, height: (t.li + 12).toFixed(1), rx: 2, fill: "#8a7550" }));
     archLayer.appendChild(mk("rect", { x: (t.x - 5).toFixed(1), y: t.y.toFixed(1), width: 4, height: (t.li + 12).toFixed(1), rx: 2, fill: "#a89268" }));
   }
@@ -856,8 +876,8 @@ function buildDecor() {
 
 /* the retro station sign, standing just south of the station */
 function buildSign() {
-  const w = 185, h = 88, sc = 0.82;
-  const spots = [[1210, 470], [1180, 520], [700, 966], [235, 120]];
+  const w = 185, h = 88, sc = 1.28;   // the title card of the whole table
+  const spots = [[1165, 430], [1140, 480], [660, 950], [235, 120]];
   let x = -1, y = -1;
   for (const [sx, sy] of spots) {
     if (footprintClear(sx - 10, sy - 10, w * sc + 20, (h + 60) * sc + 20, 6)) { x = sx; y = sy; break; }
@@ -892,8 +912,8 @@ function buildPerchedBug() {
   }
   if (x < 0) return;
   placedDecor.push({ x, y, r: 42 });
-  addBoulder(decorLayer, x, y, 0.72);
-  const g = mk("g", { id: "meganeura", transform: `translate(${(x + 2).toFixed(1)},${(y - 14).toFixed(1)}) rotate(-24)` });
+  addBoulder(decorLayer, x, y + 10, 0.85);
+  const g = mk("g", { id: "meganeura", transform: `translate(${(x + 3).toFixed(1)},${(y - 9).toFixed(1)}) rotate(-24)` });
   g.innerHTML = `
     <g class="mega-wings">
       <ellipse cx="-4" cy="-9" rx="5" ry="14" fill="rgba(190,228,236,0.55)" stroke="#5f817d" stroke-width="0.7" transform="rotate(-14 -4 -9)"></ellipse>
@@ -980,7 +1000,7 @@ function makeVehicle(kind, animal, liveryIdx = 0) {
     anchor: kind === "engine" ? ENGINE_ANCHOR : ANCHOR,
     state: "felt", pos: { e: 0, s: 0, dir: 1 }, facing: 1,
     mir: 0, mirA: 0, hx: 200, hy: 200, slot: null, train: null,
-    rolling: false, world: null, rp: null,
+    rolling: false, world: null, rp: null, livery: liveryIdx,
     pers: kind === "engine" ? [1.0, 0.93, 1.07][liveryIdx] : 1,
   };
   el.addEventListener("pointerdown", (e) => grab(e, v));
@@ -1121,7 +1141,8 @@ function updateTrains(dt, now) {
     const members = trainMembers(t);
     const ignore = new Set(members);
     let pushChain = [], other = null, headOn = false;
-    let probe = { e: t.engine.pos.e, s: t.engine.pos.s, dir: t.engine.pos.dir };
+    const lead = frontMember(t);
+    let probe = { e: lead.pos.e, s: lead.pos.s, dir: lead.pos.dir };
     let guard = 8;
     while (guard-- > 0) {
       const h = scanAhead(probe, CONTACT + 6, ignore);
@@ -1145,13 +1166,14 @@ function updateTrains(dt, now) {
         if (t.headOnT > 3.4) {
           const theirs = 1 + other.cars.length;
           if (members.length < theirs || (members.length === theirs && t.wobPh <= other.wobPh)) {
-            for (const m of members) m.pos.dir *= -1;
+            reverseTrain(t);
             t.scoot = 0.45;
             t.headOnT = -1.5; other.headOnT = -1.5;
           }
         }
       } else {
         if (t.contact !== other) { playClack(); other.scoot = 0.5; }
+        if (t.headOnT > 0) t.headOnT = 0;   // the standoff ended some other way
         sp = Math.min(sp, Math.max(0, other.lastSpeed));
         t.strain = Math.max(t.strain, 0.55);
       }
@@ -1182,7 +1204,42 @@ function updateTrains(dt, now) {
   }
 }
 
-/* ---------- Picking things up and putting them down ---------- */
+/* ---------- Captions: a little label below the table ---------- */
+
+const captionEl = document.getElementById("caption");
+let capTimer = null;
+function showCaption(text, hold = 5200) {
+  if (!captionEl) return;
+  captionEl.textContent = text;
+  captionEl.classList.add("show");
+  clearTimeout(capTimer);
+  capTimer = setTimeout(() => captionEl.classList.remove("show"), hold);
+}
+
+/* ---------- Turning a train around ---------- */
+
+function reverseTrain(t) {
+  // the whole train heads back the way it came; everyone turns to face the
+  // new direction, which leaves the engine at the back, pushing — just like
+  // reversing a real train
+  for (const m of trainMembers(t)) { m.pos.dir *= -1; m.facing *= -1; }
+  t.rev = !t.rev;          // while reversed, the last car is the leading end
+  t.scoot = Math.max(t.scoot, 0.3);
+  t.headOnT = 0;
+  playToot();
+  if (t.engine.state === "track") burstSmoke(t.engine, 2);
+}
+// the member at the physical front along the current direction of motion
+function frontMember(t) {
+  return t.rev && t.cars.length ? t.cars[t.cars.length - 1] : t.engine;
+}
+
+/* ---------- Picking things up and putting them down ----------
+   A press is ambiguous until the hand moves: past a small threshold it is a
+   grab (the toy lifts), otherwise releasing makes it a tap — taps reverse an
+   engine's train, or introduce an animal in the caption below the table. */
+
+let pressStart = null;
 
 function grab(e, v) {
   if (e.button != null && e.button !== 0) return;
@@ -1190,6 +1247,21 @@ function grab(e, v) {
   e.preventDefault();
   e.stopPropagation();
   ensureAudio();
+  held = v;
+  const p = svgPoint(e);
+  pointer.x = p.x; pointer.y = p.y;
+  pressStart = { x: p.x, y: p.y, t: performance.now(), lifted: false, pid: e.pointerId };
+  ptrHist = [{ t: performance.now(), x: p.x, y: p.y }];
+  // capture so the release reaches us even if the hand leaves the window
+  try { v.el.setPointerCapture(e.pointerId); } catch {}
+  if (v.kind === "engine") playToot();
+  else if (v.animal) tone(v.animal.note);
+}
+
+// the press has moved far enough to count as picking the toy up
+function liftHeld() {
+  const v = held;
+  pressStart.lifted = true;
   if (v.train) {
     if (v.kind === "engine") dissolveTrain(v.train);
     else {
@@ -1200,23 +1272,19 @@ function grab(e, v) {
     }
   }
   freeSlot(v);
-  held = v;
   v.state = "held";
-  const p = svgPoint(e);
-  pointer.x = p.x; pointer.y = p.y;
-  ptrHist = [{ t: performance.now(), x: p.x, y: p.y }];
   v.el.classList.add("held");
   dragLayer.appendChild(v.el);
-  if (v.kind === "engine") playToot();
-  else if (v.animal) tone(v.animal.note);
+  if (v.animal) showCaption(`${v.animal.name} — ${v.animal.fact}`);
 }
 
 window.addEventListener("pointermove", (e) => {
-  if (!held) return;
+  if (!held || e.pointerId !== pressStart.pid) return;   // one hand at a time
   const p = svgPoint(e);
   pointer.x = p.x; pointer.y = p.y;
   ptrHist.push({ t: performance.now(), x: p.x, y: p.y });
   if (ptrHist.length > 10) ptrHist.shift();
+  if (!pressStart.lifted && Math.hypot(p.x - pressStart.x, p.y - pressStart.y) > 10) liftHeld();
 });
 
 function dropDir(near) {
@@ -1231,14 +1299,44 @@ function dropDir(near) {
   return vx * tx + vy * ty >= 0 ? 1 : -1;
 }
 
+// a cancelled touch just leaves the toy wherever the hand vanished
+window.addEventListener("pointercancel", (e) => {
+  if (!held || (pressStart && e.pointerId !== pressStart.pid)) return;
+  const v = held;
+  held = null;
+  if (!pressStart || !pressStart.lifted) return;
+  v.el.classList.remove("held");
+  if (pointer.x > TRAY_X - 30) {
+    takeSlot(v);
+    v.mir = 0; v.mirA = 0;
+  } else {
+    v.state = "felt";
+    v.hx = pointer.x; v.hy = pointer.y;
+  }
+});
+
 window.addEventListener("pointerup", (e) => {
-  if (!held) return;
+  if (!held || (pressStart && e.pointerId != null && e.pointerId !== pressStart.pid)) return;
   if (e.clientX != null && trackSvg.getScreenCTM()) {
     const p = svgPoint(e);
     pointer.x = p.x; pointer.y = p.y;
   }
   const v = held;
   held = null;
+  if (!pressStart || !pressStart.lifted) {
+    // a tap, not a grab: the toy never left the table
+    if (v.kind === "engine") {
+      if (v.train && v.state === "track") {
+        reverseTrain(v.train);
+        showCaption(`Engine No. ${LIVERIES[v.livery].num} heads back the other way`);
+      } else {
+        showCaption(`Engine No. ${LIVERIES[v.livery].num}`);
+      }
+    } else if (v.animal) {
+      showCaption(`${v.animal.name} — ${v.animal.fact}`);
+    }
+    return;
+  }
   v.el.classList.remove("held");
   if (pointer.x > TRAY_X - 30) {
     takeSlot(v);
