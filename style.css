@@ -189,6 +189,11 @@ body {
 .blink-parasaur { animation-delay: -0.5s; }
 .blink-spino { animation-delay: -1.95s; }
 .blink-plesio { animation-delay: -2.9s; }
+.blink-pachy { animation-delay: -3.3s; }
+.blink-theri { animation-delay: -1.45s; }
+.blink-glypto { animation-delay: -3.7s; }
+.blink-rhino { animation-delay: -0.95s; }
+.blink-archaeo { animation-delay: -2.35s; }
 
 @keyframes animalBlink {
   0%, 88%, 94%, 100% { transform: scaleY(1); }

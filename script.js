@@ -29,6 +29,16 @@ const ANIMALS = [
     fact: "Spinosaurus had a sail on its back and a long snout for catching fish." },
   { id: "plesio", name: "Plesiosaur", color: "#d8c0f0", note: 1046.5,
     fact: "Plesiosaurs were ocean reptiles with paddle-like flippers and very long necks." },
+  { id: "pachy", name: "Pachycephalosaurus", color: "#eec2ae", note: 1108.7,
+    fact: "Pachycephalosaurus wore a skull dome up to 25 cm thick — built-in headgear for head-butting contests." },
+  { id: "theri", name: "Therizinosaurus", color: "#c8e0ae", note: 415.3,
+    fact: "Therizinosaurus had meter-long claws, the longest of any animal ever — mostly used for pulling down leaves." },
+  { id: "glypto", name: "Glyptodon", color: "#d5bfe8", note: 246.9,
+    fact: "Glyptodon was an armadillo the size of a small car, wearing a shell of over a thousand bony plates." },
+  { id: "rhino", name: "Woolly Rhino", color: "#bcd0dc", note: 207.7,
+    fact: "Woolly rhinos used their huge front horn to sweep snow off the grass they ate." },
+  { id: "archaeo", name: "Archaeopteryx", color: "#f2dc9e", note: 1318.5,
+    fact: "Archaeopteryx had feathered wings like a bird, but teeth and a long bony tail like a dinosaur." },
 ];
 
 /* ---------- Tuning ---------- */
@@ -251,6 +261,92 @@ const ART = {
       <path d="M58,-50 Q49,-51 51,-45 L64,-45 Z" fill="#4f8fbd" stroke="#2c2418" stroke-width="1.5" stroke-linejoin="round"></path>
       <circle class="blink blink-plesio" cx="66" cy="-51" r="1.8" fill="#111"></circle>
     </g>
+  `,
+  // Pachycephalosaurus: stocky body, neck up to a head crowned with a thick bony dome (facing left).
+  pachy: () => `
+    <path d="M106,12 Q122,8 130,16" stroke="#2c2418" stroke-width="9" fill="none" stroke-linecap="round"></path>
+    <path d="M106,12 Q122,8 130,16" stroke="#bd9168" stroke-width="6" fill="none" stroke-linecap="round"></path>
+    <ellipse cx="74" cy="13" rx="36" ry="12" fill="#bd9168" stroke="#2c2418" stroke-width="2"></ellipse>
+    <path d="M50,8 Q40,-8 42,-20" stroke="#2c2418" stroke-width="12" fill="none" stroke-linecap="round"></path>
+    <path d="M50,8 Q40,-8 42,-20" stroke="#bd9168" stroke-width="9" fill="none" stroke-linecap="round"></path>
+    <g class="trex-head-bob">
+      <path d="M26,-18 Q20,-15 18,-9 Q26,-5 36,-7 Q48,-9 54,-18 Q58,-28 54,-35 Q48,-43 39,-42 Q28,-41 26,-30 Z" fill="#bd9168" stroke="#2c2418" stroke-width="2" stroke-linejoin="round"></path>
+      <path d="M28,-30 Q30,-39 39,-40 Q50,-40 53,-32 Q46,-36 39,-35 Q32,-34 28,-30 Z" fill="#e0c39a" stroke="#2c2418" stroke-width="1.6" stroke-linejoin="round"></path>
+      <circle cx="26" cy="-24" r="1.7" fill="#8a6544"></circle>
+      <circle cx="31" cy="-34" r="1.7" fill="#8a6544"></circle>
+      <circle cx="49" cy="-37" r="1.7" fill="#8a6544"></circle>
+      <circle cx="55" cy="-27" r="1.7" fill="#8a6544"></circle>
+      <circle class="blink blink-pachy" cx="29" cy="-14" r="2" fill="#111"></circle>
+    </g>
+  `,
+  // Therizinosaurus: pot-bellied browser with a small head and famously enormous pale claws (facing left).
+  theri: () => `
+    <path d="M104,14 Q120,10 128,18" stroke="#2c2418" stroke-width="9" fill="none" stroke-linecap="round"></path>
+    <path d="M104,14 Q120,10 128,18" stroke="#8fae72" stroke-width="6" fill="none" stroke-linecap="round"></path>
+    <ellipse cx="76" cy="9" rx="34" ry="15" fill="#8fae72" stroke="#2c2418" stroke-width="2"></ellipse>
+    <path d="M64,-4 l-3,-9 M78,-6 l-1,-10 M92,-4 l2,-9" stroke="#6e8f55" stroke-width="2" stroke-linecap="round" fill="none"></path>
+    <g class="neck-sway">
+      <path d="M52,2 Q44,-20 48,-38" stroke="#2c2418" stroke-width="10" fill="none" stroke-linecap="round"></path>
+      <path d="M52,2 Q44,-20 48,-38" stroke="#8fae72" stroke-width="7" fill="none" stroke-linecap="round"></path>
+      <ellipse cx="47" cy="-43" rx="8.5" ry="6.5" fill="#8fae72" stroke="#2c2418" stroke-width="1.8"></ellipse>
+      <path d="M40,-45 Q32,-45 31,-40 L40,-39 Z" fill="#6e8f55" stroke="#2c2418" stroke-width="1.4" stroke-linejoin="round"></path>
+      <circle class="blink blink-theri" cx="45" cy="-45" r="1.7" fill="#111"></circle>
+    </g>
+    <g class="crest-sway">
+      <path d="M58,8 Q46,10 40,17" stroke="#2c2418" stroke-width="7" fill="none" stroke-linecap="round"></path>
+      <path d="M58,8 Q46,10 40,17" stroke="#7e9e63" stroke-width="4.5" fill="none" stroke-linecap="round"></path>
+      <path d="M40,17 q-9,1 -15,8 M40,17 q-6,5 -7,13 M40,17 q-1,7 2,13" stroke="#2c2418" stroke-width="4.6" fill="none" stroke-linecap="round"></path>
+      <path d="M40,17 q-9,1 -15,8 M40,17 q-6,5 -7,13 M40,17 q-1,7 2,13" stroke="#ecdfc2" stroke-width="2.8" fill="none" stroke-linecap="round"></path>
+    </g>
+  `,
+  // Glyptodon: a car-sized armadillo — a great domed shell of bony plates, little head in front, club tail.
+  glypto: () => `
+    <g class="tail-sway">
+      <path d="M112,10 Q123,8 126,15" stroke="#2c2418" stroke-width="9" fill="none" stroke-linecap="round"></path>
+      <path d="M112,10 Q123,8 126,15" stroke="#9c8156" stroke-width="6" fill="none" stroke-linecap="round"></path>
+      <circle cx="126" cy="16" r="5.5" fill="#7d6544" stroke="#2c2418" stroke-width="1.8"></circle>
+    </g>
+    <path d="M28,16 Q26,-14 62,-21 Q100,-24 113,2 Q118,13 112,17 Z" fill="#a98d5f" stroke="#2c2418" stroke-width="2" stroke-linejoin="round"></path>
+    <circle cx="48" cy="-8" r="2.1" fill="#8a7048"></circle><circle cx="66" cy="-13" r="2.1" fill="#8a7048"></circle>
+    <circle cx="86" cy="-11" r="2.1" fill="#8a7048"></circle><circle cx="101" cy="-3" r="2.1" fill="#8a7048"></circle>
+    <circle cx="55" cy="3" r="2.1" fill="#8a7048"></circle><circle cx="74" cy="0" r="2.1" fill="#8a7048"></circle>
+    <circle cx="92" cy="4" r="2.1" fill="#8a7048"></circle><circle cx="40" cy="6" r="2.1" fill="#8a7048"></circle>
+    <ellipse cx="29" cy="8" rx="11" ry="8" fill="#9c8156" stroke="#2c2418" stroke-width="2"></ellipse>
+    <path d="M25,-1 L22,-9 L30,-3 Z" fill="#9c8156" stroke="#2c2418" stroke-width="1.4" stroke-linejoin="round"></path>
+    <circle class="blink blink-glypto" cx="25" cy="6" r="1.8" fill="#111"></circle>
+  `,
+  // Woolly rhino: shaggy coat, small ears, and one grand curved horn out front (facing left).
+  rhino: () => `
+    <path d="M34,18 Q28,-8 60,-13 Q94,-16 106,-2 Q113,10 107,18 L99,14 L91,18 L83,14 L75,18 L67,14 L59,18 L51,14 L43,18 Z" fill="#a67c52" stroke="#2c2418" stroke-width="2" stroke-linejoin="round"></path>
+    <path d="M50,-6 q-2,6 0,11 M64,-9 q-2,6 0,11 M80,-10 q-2,6 0,11 M94,-7 q-2,6 0,10" stroke="#8a6544" stroke-width="1.7" fill="none" stroke-linecap="round"></path>
+    <g class="saber-ear-twitch">
+      <path d="M46,-11 L43,-21 L52,-13 Z" fill="#a67c52" stroke="#2c2418" stroke-width="1.7" stroke-linejoin="round"></path>
+    </g>
+    <path d="M38,0 Q28,0 21,6 Q17,11 19,16 L38,16 Z" fill="#a67c52" stroke="#2c2418" stroke-width="2" stroke-linejoin="round"></path>
+    <path d="M22,8 Q13,2 12,-12 Q18,-3 25,3 Z" fill="#ecdfc2" stroke="#2c2418" stroke-width="1.7" stroke-linejoin="round"></path>
+    <path d="M30,2 L29,-4 L34,0 Z" fill="#ecdfc2" stroke="#2c2418" stroke-width="1.3" stroke-linejoin="round"></path>
+    <circle class="blink blink-rhino" cx="35" cy="4" r="1.9" fill="#111"></circle>
+  `,
+  // Archaeopteryx: half bird, half dinosaur — feathered wings, a toothy little beak and a long plumed tail.
+  archaeo: () => `
+    <g class="wing wing-left">
+      <path d="M62,-2 Q42,-16 20,-11 Q30,-4 42,-1 Q31,2 21,1 Q35,9 54,7 Z" fill="#c98a4b" stroke="#2c2418" stroke-width="2" stroke-linejoin="round"></path>
+    </g>
+    <g class="wing wing-right">
+      <path d="M80,-2 Q100,-16 122,-11 Q112,-4 100,-1 Q111,2 121,1 Q107,9 88,7 Z" fill="#c98a4b" stroke="#2c2418" stroke-width="2" stroke-linejoin="round"></path>
+    </g>
+    <path d="M80,8 Q100,16 116,13" stroke="#2c2418" stroke-width="7" fill="none" stroke-linecap="round"></path>
+    <path d="M80,8 Q100,16 116,13" stroke="#b5793f" stroke-width="4.4" fill="none" stroke-linecap="round"></path>
+    <path d="M98,13 l3,-8 M106,14 l4,-7 M114,13 l5,-6" stroke="#8a5a2e" stroke-width="2.2" fill="none" stroke-linecap="round"></path>
+    <ellipse cx="70" cy="4" rx="12" ry="13" fill="#b5793f" stroke="#2c2418" stroke-width="2"></ellipse>
+    <path d="M70,-8 L70,-15" stroke="#2c2418" stroke-width="9" stroke-linecap="round"></path>
+    <path d="M70,-8 L70,-15" stroke="#b5793f" stroke-width="6" stroke-linecap="round"></path>
+    <circle cx="69" cy="-19" r="7.5" fill="#b5793f" stroke="#2c2418" stroke-width="1.8"></circle>
+    <path d="M62,-21 L53,-18 L62,-15 Z" fill="#e0b06a" stroke="#2c2418" stroke-width="1.3" stroke-linejoin="round"></path>
+    <path d="M60,-18.5 l2,1.5 l2,-1.5" stroke="#fff" stroke-width="1.1" fill="none"></path>
+    <circle class="blink blink-archaeo" cx="67" cy="-21" r="1.5" fill="#111"></circle>
+    <path d="M64,16 L62,23 M76,16 L78,23" stroke="#2c2418" stroke-width="4" stroke-linecap="round"></path>
+    <path d="M64,16 L62,23 M76,16 L78,23" stroke="#c98a4b" stroke-width="2.2" stroke-linecap="round"></path>
   `,
 };
 
@@ -942,57 +1038,46 @@ function buildMountain() {
   addFern(mountainLayer, c.x - 66, c.y - 88, 0.6, -2);
   addFern(mountainLayer, c.x - 40, c.y + 116, 0.7, -4.5);
   addGrass(mountainLayer, c.x + 20, c.y + 64, 0.6, -1.2);
-  // tunnel portals: a timber lintel and a dark mouth, square to the track
+  // tunnel portals: a rocky surround joins each mouth to the mountain proper,
+  // so the track visibly enters THROUGH the portal, not just behind the rock
   for (const k of [-1, 1]) {
     const p = posAt(E.idx, z.s + k * z.half);
     const g = mk("g", { transform: `translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) rotate(${p.angle.toFixed(1)})` });
-    const inw = k < 0 ? 0 : -26;
-    g.appendChild(mk("rect", { x: inw, y: -32, width: 26, height: 64, rx: 5, fill: "#33291d" }));
-    g.appendChild(mk("rect", { x: -4, y: -38, width: 8, height: 76, rx: 3.5, fill: "#8d6745", stroke: "#5f3717", "stroke-width": 2 }));
+    const inw = k < 0 ? -6 : -104;
+    g.appendChild(mk("rect", { x: inw, y: -47, width: 110, height: 94, rx: 24, fill: "#7e805d", stroke: "#62654a", "stroke-width": 2.5 }));
+    g.appendChild(mk("rect", { x: k < 0 ? 0 : -30, y: -32, width: 30, height: 64, rx: 6, fill: "#33291d" }));
+    g.appendChild(mk("rect", { x: -4.5, y: -39, width: 9, height: 78, rx: 4, fill: "#8d6745", stroke: "#5f3717", "stroke-width": 2 }));
     mountainLayer.appendChild(g);
   }
+  // the summit is a crater: this mountain is the volcano, napping
+  const vx = c.x + 30, vy = c.y - 38;
+  mountainLayer.appendChild(mk("ellipse", { cx: vx, cy: vy, rx: 24, ry: 9, fill: "#4a3a2c", stroke: "#3a2d21", "stroke-width": 2.5 }));
+  mountainLayer.appendChild(mk("ellipse", { cx: vx, cy: vy, rx: 13, ry: 4.6, fill: "#b4502e" }));
+  mountainLayer.appendChild(mk("ellipse", { cx: vx - 3, cy: vy - 0.5, rx: 5, ry: 1.9, fill: "#e8792f" }));
+  VOLCANO.x = vx; VOLCANO.y = vy; VOLCANO.tipY = vy - 4; VOLCANO.ok = true;
   placedDecor.push({ x: c.x, y: c.y, r: Math.max(rx, ry) * 0.9 });
 }
 
-/* ---------- The volcano (gently active) ---------- */
+/* ---------- The crater (the mountain IS the volcano, napping) ---------- */
 
-const VOLCANO = { x: 0, y: 0, tipY: 0, ok: false, t: 18 };
-function buildVolcano() {
-  const spots = [[1340, 328], [452, 692], [962, 116]];
-  let sx = -1, sy = -1;
-  for (const [cx, cy] of spots) {
-    if (feltClear(cx, cy, 50) && !placedDecor.some((p) => Math.hypot(p.x - cx, p.y - cy) < p.r + 70)) { sx = cx; sy = cy; break; }
-  }
-  if (sx < 0) return;
-  const g = mk("g", { transform: `translate(${sx},${sy})` });
-  g.appendChild(mk("ellipse", { cx: 4, cy: 54, rx: 76, ry: 13, fill: "rgba(43,54,37,0.14)" }));
-  g.appendChild(mk("path", { d: "M-72,52 Q-52,16 -32,-16 Q-16,-33 0,-33 Q16,-33 32,-16 Q52,16 72,52 Q30,60 0,60 Q-30,60 -72,52 Z", fill: "#7c4b3b", stroke: "#5f382c", "stroke-width": 2.5, "stroke-linejoin": "round" }));
-  g.appendChild(mk("path", { d: "M-36,14 Q-27,-6 -14,-22 M-6,-30 Q0,-14 -4,10 M30,6 Q22,-10 12,-24", fill: "none", stroke: "#93604c", "stroke-width": 3.5, "stroke-linecap": "round", opacity: "0.8" }));
-  g.appendChild(mk("ellipse", { cx: 0, cy: -33, rx: 25, ry: 8.5, fill: "#4a2c24", stroke: "#3a211b", "stroke-width": 2 }));
-  g.appendChild(mk("ellipse", { cx: 0, cy: -33, rx: 13, ry: 4.5, fill: "#b4502e" }));
-  g.appendChild(mk("ellipse", { cx: -3, cy: -33.5, rx: 5, ry: 2, fill: "#e8792f" }));
-  addBoulder(decorLayer, sx - 62, sy + 46, 0.5);
-  decorLayer.appendChild(g);
-  placedDecor.push({ x: sx, y: sy, r: 92 });
-  VOLCANO.x = sx; VOLCANO.y = sy; VOLCANO.tipY = sy - 36; VOLCANO.ok = true;
-}
+const VOLCANO = { x: 0, y: 0, tipY: 0, ok: false, t: 9 };
 function volcanoPuff() {
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 4; i++) {
     setTimeout(() => {
       const el = document.createElementNS(SVG_NS, "circle");
       el.setAttribute("fill", "#c9bfae");
       smokeLayer.appendChild(el);
       puffs.push({
         el,
-        x: VOLCANO.x + (Math.random() - 0.5) * 12,
+        x: VOLCANO.x + (Math.random() - 0.5) * 14,
         y: VOLCANO.tipY,
-        r: 8 + Math.random() * 5,
+        r: 10 + Math.random() * 6,
         o: 0.55,
         vx: (Math.random() - 0.5) * 7,
-        vy: -13 - Math.random() * 7,
+        vy: -15 - Math.random() * 7,
         gr: 9,
       });
-    }, i * 260);
+    }, i * 240);
   }
   tone(52, 0.5, "sine", 0, 0.09);
 }
@@ -1086,11 +1171,6 @@ function buildDigSite() {
   // ribs breaking the surface
   g.appendChild(mk("path", { d: "M18,16 q6,-20 16,-24 M34,18 q6,-18 15,-22 M50,18 q5,-15 13,-19", fill: "none", stroke: "#b3a077", "stroke-width": 7, "stroke-linecap": "round" }));
   g.appendChild(mk("path", { d: "M18,16 q6,-20 16,-24 M34,18 q6,-18 15,-22 M50,18 q5,-15 13,-19", fill: "none", stroke: "#f2ead0", "stroke-width": 4.4, "stroke-linecap": "round" }));
-  // the paleontologist's brush, left mid-job
-  const brush = mk("g", { transform: "translate(28,-30) rotate(24)" });
-  brush.appendChild(mk("rect", { x: -2.5, y: -16, width: 5, height: 20, rx: 2.2, fill: "#8d6745", stroke: "#5f3717", "stroke-width": 1.4 }));
-  brush.appendChild(mk("path", { d: "M-4,4 h8 l2,9 q-6,3 -12,0 Z", fill: "#caa36b", stroke: "#9c7a4a", "stroke-width": 1.4 }));
-  g.appendChild(brush);
   decorLayer.appendChild(g);
   placedDecor.push({ x: sx, y: sy, r: 108 });
 }
@@ -1145,9 +1225,9 @@ function buildTray() {
   const cxA = x0 + 96, cxB = x0 + 258;
   const rnd = mulberry32(99173);
   for (let i = 0; i < 3; i++) ENGINE_SLOTS.push({ x: x0 + 66 + i * 106, y: y0 + 92, rot: rnd() * 8 - 4, sc: 0.6, v: null });
-  for (let r = 0; r < 7; r++) {
-    CAR_SLOTS.push({ x: cxA + rnd() * 14 - 7, y: y0 + 230 + r * 118 + rnd() * 10 - 5, rot: rnd() * 18 - 9, sc: 0.64, v: null });
-    CAR_SLOTS.push({ x: cxB + rnd() * 14 - 7, y: y0 + 230 + r * 118 + rnd() * 10 - 5, rot: rnd() * 18 - 9, sc: 0.64, v: null });
+  for (let r = 0; r < 8; r++) {
+    CAR_SLOTS.push({ x: cxA + rnd() * 14 - 7, y: y0 + 224 + r * 104 + rnd() * 10 - 5, rot: rnd() * 18 - 9, sc: 0.62, v: null });
+    CAR_SLOTS.push({ x: cxB + rnd() * 14 - 7, y: y0 + 224 + r * 104 + rnd() * 10 - 5, rot: rnd() * 18 - 9, sc: 0.62, v: null });
   }
 }
 function takeSlot(v) {
@@ -1777,7 +1857,6 @@ buildPlatform();
 buildLevers();
 buildSign();
 buildMountain();
-buildVolcano();
 buildDigSite();
 buildGroves();
 buildDecor();
@@ -1809,7 +1888,7 @@ function frame(timestamp) {
   }
   if (VOLCANO.ok) {
     VOLCANO.t -= dt;
-    if (VOLCANO.t <= 0) { volcanoPuff(); VOLCANO.t = 42 + Math.random() * 55; }
+    if (VOLCANO.t <= 0) { volcanoPuff(); VOLCANO.t = 26 + Math.random() * 34; }
   }
   updatePuffs(dt);
   requestAnimationFrame(frame);
