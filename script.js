@@ -1560,6 +1560,7 @@ function tryAutoCouples(t) {
 
 function updateTrains(dt, now) {
   const advanced = new Set();
+  for (const v of vehicles) v.pushClaim = null;   // fresh push claims every frame
   for (const t of TRAINS) {
     const members = trainMembers(t);
     const ignore = new Set(members);
@@ -1571,9 +1572,34 @@ function updateTrains(dt, now) {
       const h = scanAhead(probe, CONTACT + 6, ignore);
       if (!h || h.gap > CONTACT + 4) break;
       if (h.veh.train && h.veh.train !== t) { other = h.veh.train; headOn = h.veh.pos.dir !== h.dir; break; }
+      if (h.veh.pushClaim && h.veh.pushClaim !== t) {
+        // another train already has hands on this car — meet THAT train instead
+        other = h.veh.pushClaim;
+        headOn = h.veh.pushDir !== h.dir;
+        break;
+      }
       pushChain.push({ v: h.veh, dir: h.dir });
+      h.veh.pushClaim = t; h.veh.pushDir = h.dir;
       ignore.add(h.veh);
       probe = { e: h.veh.pos.e, s: h.veh.pos.s, dir: h.dir };
+    }
+    // junction courtesy: contact scans follow the levers, so a train converging
+    // from the OTHER branch is invisible to them — instead, nobody drives into
+    // a junction while another train is using it (the closer one goes first)
+    let nodeBlock = false;
+    if (!other) {
+      const dNode = lead.pos.dir > 0 ? EDGES[lead.pos.e].len - lead.pos.s : lead.pos.s;
+      if (dNode < 150 && lead.world) {
+        const node = NODES[lead.pos.dir > 0 ? EDGES[lead.pos.e].bNode : EDGES[lead.pos.e].aNode];
+        const myD = Math.hypot(lead.world.x - node.x, lead.world.y - node.y);
+        for (const v2 of vehicles) {
+          if (v2.state !== "track" || !v2.train || ignore.has(v2) || !v2.world) continue;
+          const d2 = Math.hypot(v2.world.x - node.x, v2.world.y - node.y);
+          if (d2 > 150) continue;
+          if (v2.train.lastSpeed > 5 || d2 < myD - 8 ||
+              (Math.abs(d2 - myD) <= 8 && TRAINS.indexOf(v2.train) < TRAINS.indexOf(t))) { nodeBlock = true; break; }
+        }
+      }
     }
     t.ramp = Math.min(1, t.ramp + dt / 1.1);
     const wob = 1 + 0.06 * Math.sin(now * t.wobW + t.wobPh);
@@ -1606,6 +1632,7 @@ function updateTrains(dt, now) {
       if (t.headOnT > 0) t.headOnT = 0;
     }
     if (t.headOnT < 0) t.headOnT = Math.min(0, t.headOnT + dt);
+    if (nodeBlock) { sp = 0; t.strain = Math.max(t.strain, 0.4); }
     sp *= 1 + t.scoot;
     t.scoot *= Math.exp(-dt / 0.9);
     if (t.scoot < 0.01) t.scoot = 0;
@@ -1794,7 +1821,13 @@ window.addEventListener("pointerup", (e) => {
   const near = nearestOnTrack(pointer.x, pointer.y);
   if (near.dist < SNAP_DIST) {
     // a hand never drops one toy inside another: slide along the rail to a clear spot
-    const isTaken = (e, s) => vehicles.some((v2) => v2 !== v && v2.state === "track" && v2.pos.e === e && Math.abs(v2.pos.s - s) < 110);
+    // (checked in world space too, so junction crotches on other edges count)
+    const isTaken = (e, s) => {
+      if (vehicles.some((v2) => v2 !== v && v2.state === "track" && v2.pos.e === e && Math.abs(v2.pos.s - s) < 110)) return true;
+      const p = posAt(e, s);
+      return vehicles.some((v2) => v2 !== v && v2.state === "track" && v2.world &&
+        Math.hypot(v2.world.x - p.x, v2.world.y - p.y) < 95);
+    };
     let s = near.s;
     for (const off of [0, 65, -65, 130, -130, 195, -195]) {
       const cand = Math.max(8, Math.min(EDGES[near.e].len - 8, near.s + off));
