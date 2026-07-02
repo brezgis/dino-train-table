@@ -1038,17 +1038,8 @@ function buildMountain() {
   addFern(mountainLayer, c.x - 66, c.y - 88, 0.6, -2);
   addFern(mountainLayer, c.x - 40, c.y + 116, 0.7, -4.5);
   addGrass(mountainLayer, c.x + 20, c.y + 64, 0.6, -1.2);
-  // tunnel portals: a rocky surround joins each mouth to the mountain proper,
-  // so the track visibly enters THROUGH the portal, not just behind the rock
-  for (const k of [-1, 1]) {
-    const p = posAt(E.idx, z.s + k * z.half);
-    const g = mk("g", { transform: `translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) rotate(${p.angle.toFixed(1)})` });
-    const inw = k < 0 ? -6 : -104;
-    g.appendChild(mk("rect", { x: inw, y: -47, width: 110, height: 94, rx: 24, fill: "#7e805d", stroke: "#62654a", "stroke-width": 2.5 }));
-    g.appendChild(mk("rect", { x: k < 0 ? 0 : -30, y: -32, width: 30, height: 64, rx: 6, fill: "#33291d" }));
-    g.appendChild(mk("rect", { x: -4.5, y: -39, width: 9, height: 78, rx: 4, fill: "#8d6745", stroke: "#5f3717", "stroke-width": 2 }));
-    mountainLayer.appendChild(g);
-  }
+  // no drawn portals: the track simply runs in under the rock's edge, the way
+  // a wooden tunnel-rock sits over the rails on a real table
   placedDecor.push({ x: c.x, y: c.y, r: Math.max(rx, ry) * 0.9 });
 }
 
