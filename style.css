@@ -90,7 +90,30 @@ body {
 }
 
 #decorLayer { pointer-events: none; }
-#archLayer, #bridgeLayer, #smokeLayer { pointer-events: none; }
+#archLayer, #bridgeLayer, #smokeLayer, #mountainLayer { pointer-events: none; }
+
+/* wild dinos grazing on the felt */
+.figure { cursor: grab; }
+.figure:active { cursor: grabbing; }
+.figure:hover { filter: brightness(1.07); }
+.fig-graze {
+  transform-box: fill-box;
+  transform-origin: 92% 12%;
+  animation: figGraze 8.5s ease-in-out infinite;
+}
+@keyframes figGraze {
+  0%, 46%, 100% { transform: rotate(0deg); }
+  56%, 88% { transform: rotate(-9deg); }
+}
+.fig-peck {
+  transform-box: fill-box;
+  transform-origin: 88% 88%;
+  animation: figPeck 5.6s ease-in-out infinite;
+}
+@keyframes figPeck {
+  0%, 74%, 92%, 100% { transform: rotate(0deg); }
+  80%, 86% { transform: rotate(14deg); }
+}
 
 .decor-sway {
   transform-box: fill-box;

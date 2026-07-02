@@ -468,6 +468,18 @@ const LAKE = { x: 132, y: 452, rx: 256, ry: 204 };
   const lo = Math.max(60, s0 - 55), hi = Math.min(E.len - 60, s1 + 55);
   if (hi > lo) E.zones.push({ s: (lo + hi) / 2, half: (hi - lo) / 2, lift: 20, kind: "cause" });
 })();
+
+/* the mountain tunnel: trains disappear behind the rock where the right-end
+   track runs along the table's east edge */
+(function tunnelZone() {
+  const E = edgeByName("right");
+  let s0 = -1, s1 = -1;
+  for (let i = 0; i < E.pts.length; i++) {
+    if (E.pts[i].x > 1608) { if (s0 < 0) s0 = E.cum[i]; s1 = E.cum[i]; }
+  }
+  if (s0 < 0) return;
+  E.zones.push({ s: (s0 + s1) / 2, half: Math.min(170, (s1 - s0) / 2), lift: 0, kind: "tunnel" });
+})();
 /*GEOM-END*/
 
 /* ---------- Moving along the network ---------- */
@@ -641,6 +653,7 @@ const underLayer = document.getElementById("underLayer");
 const midLayer = document.getElementById("midLayer");
 const bridgeLayer = document.getElementById("bridgeLayer");
 const overLayer = document.getElementById("overLayer");
+const mountainLayer = document.getElementById("mountainLayer");
 const smokeLayer = document.getElementById("smokeLayer");
 const trayLayer = document.getElementById("trayLayer");
 const dragLayer = document.getElementById("dragLayer");
@@ -900,6 +913,188 @@ function buildSign() {
   placedDecor.push({ x: x + (w * sc) / 2, y: y + (h * sc) / 2, r: 95 });
 }
 
+/* ---------- The mountain with the tunnel ---------- */
+
+function blobPath(cx, cy, rx, ry, ph) {
+  const N = 26, pts = [];
+  for (let i = 0; i < N; i++) {
+    const a = (i / N) * Math.PI * 2;
+    const wob = 1 + 0.09 * Math.sin(a * 3 + ph) + 0.06 * Math.sin(a * 5 + ph * 2.1);
+    pts.push([cx + Math.cos(a) * rx * wob, cy + Math.sin(a) * ry * wob]);
+  }
+  return pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ") + " Z";
+}
+
+function buildMountain() {
+  const E = edgeByName("right");
+  const z = E.zones.find((zz) => zz.kind === "tunnel");
+  if (!z) return;
+  const mid = posAt(E.idx, z.s);
+  const c = { x: Math.min(mid.x + 78, 1716), y: mid.y };
+  const rx = 138, ry = z.half + 78;
+  // the rock itself, pushed against the table's east edge like the lake on the west
+  mountainLayer.appendChild(mk("path", { d: blobPath(c.x + 8, c.y + 12, rx + 10, ry + 6, 1.3), fill: "rgba(43,54,37,0.16)" }));
+  mountainLayer.appendChild(mk("path", { d: blobPath(c.x, c.y, rx, ry, 0.6), fill: "#7e805d", stroke: "#62654a", "stroke-width": 3 }));
+  mountainLayer.appendChild(mk("path", { d: blobPath(c.x + 16, c.y - 22, rx * 0.62, ry * 0.6, 2.2), fill: "#92946c" }));
+  mountainLayer.appendChild(mk("path", { d: blobPath(c.x + 30, c.y - 38, rx * 0.34, ry * 0.3, 3.4), fill: "#a6a87e" }));
+  mountainLayer.appendChild(mk("path", { d: `M${c.x - 52},${c.y + 60} q14,-30 8,-64 M${c.x - 12},${c.y + ry * 0.55} q18,-22 12,-52 M${c.x + 34},${c.y - 66} q12,-16 6,-38`, fill: "none", stroke: "#5c604a", "stroke-width": 3, "stroke-linecap": "round", opacity: "0.5" }));
+  // a few ferns clinging to the flanks
+  addFern(mountainLayer, c.x - 66, c.y - 88, 0.6, -2);
+  addFern(mountainLayer, c.x - 40, c.y + 116, 0.7, -4.5);
+  addGrass(mountainLayer, c.x + 20, c.y + 64, 0.6, -1.2);
+  // tunnel portals: a timber lintel and a dark mouth, square to the track
+  for (const k of [-1, 1]) {
+    const p = posAt(E.idx, z.s + k * z.half);
+    const g = mk("g", { transform: `translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) rotate(${p.angle.toFixed(1)})` });
+    const inw = k < 0 ? 0 : -26;
+    g.appendChild(mk("rect", { x: inw, y: -32, width: 26, height: 64, rx: 5, fill: "#33291d" }));
+    g.appendChild(mk("rect", { x: -4, y: -38, width: 8, height: 76, rx: 3.5, fill: "#8d6745", stroke: "#5f3717", "stroke-width": 2 }));
+    mountainLayer.appendChild(g);
+  }
+  placedDecor.push({ x: c.x, y: c.y, r: Math.max(rx, ry) * 0.9 });
+}
+
+/* ---------- The volcano (gently active) ---------- */
+
+const VOLCANO = { x: 0, y: 0, tipY: 0, ok: false, t: 18 };
+function buildVolcano() {
+  const spots = [[1340, 328], [452, 692], [962, 116]];
+  let sx = -1, sy = -1;
+  for (const [cx, cy] of spots) {
+    if (feltClear(cx, cy, 50) && !placedDecor.some((p) => Math.hypot(p.x - cx, p.y - cy) < p.r + 70)) { sx = cx; sy = cy; break; }
+  }
+  if (sx < 0) return;
+  const g = mk("g", { transform: `translate(${sx},${sy})` });
+  g.appendChild(mk("ellipse", { cx: 4, cy: 54, rx: 76, ry: 13, fill: "rgba(43,54,37,0.14)" }));
+  g.appendChild(mk("path", { d: "M-72,52 Q-52,16 -32,-16 Q-16,-33 0,-33 Q16,-33 32,-16 Q52,16 72,52 Q30,60 0,60 Q-30,60 -72,52 Z", fill: "#7c4b3b", stroke: "#5f382c", "stroke-width": 2.5, "stroke-linejoin": "round" }));
+  g.appendChild(mk("path", { d: "M-36,14 Q-27,-6 -14,-22 M-6,-30 Q0,-14 -4,10 M30,6 Q22,-10 12,-24", fill: "none", stroke: "#93604c", "stroke-width": 3.5, "stroke-linecap": "round", opacity: "0.8" }));
+  g.appendChild(mk("ellipse", { cx: 0, cy: -33, rx: 25, ry: 8.5, fill: "#4a2c24", stroke: "#3a211b", "stroke-width": 2 }));
+  g.appendChild(mk("ellipse", { cx: 0, cy: -33, rx: 13, ry: 4.5, fill: "#b4502e" }));
+  g.appendChild(mk("ellipse", { cx: -3, cy: -33.5, rx: 5, ry: 2, fill: "#e8792f" }));
+  addBoulder(decorLayer, sx - 62, sy + 46, 0.5);
+  decorLayer.appendChild(g);
+  placedDecor.push({ x: sx, y: sy, r: 92 });
+  VOLCANO.x = sx; VOLCANO.y = sy; VOLCANO.tipY = sy - 36; VOLCANO.ok = true;
+}
+function volcanoPuff() {
+  for (let i = 0; i < 3; i++) {
+    setTimeout(() => {
+      const el = document.createElementNS(SVG_NS, "circle");
+      el.setAttribute("fill", "#c9bfae");
+      smokeLayer.appendChild(el);
+      puffs.push({
+        el,
+        x: VOLCANO.x + (Math.random() - 0.5) * 12,
+        y: VOLCANO.tipY,
+        r: 8 + Math.random() * 5,
+        o: 0.55,
+        vx: (Math.random() - 0.5) * 7,
+        vy: -13 - Math.random() * 7,
+        gr: 9,
+      });
+    }, i * 260);
+  }
+  tone(52, 0.5, "sine", 0, 0.09);
+}
+
+/* ---------- Prehistoric groves: cycads and tree ferns ---------- */
+
+function addCycad(parent, x, y, scale, delay) {
+  const g = mk("g", { transform: `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${scale.toFixed(2)})` });
+  g.appendChild(mk("ellipse", { cx: 0, cy: 3, rx: 22, ry: 6, fill: "rgba(43,54,37,0.13)" }));
+  g.appendChild(mk("path", { d: "M-8,2 Q-9,-16 -6,-26 L6,-26 Q9,-16 8,2 Z", fill: "#8a6a3f", stroke: "#6e5232", "stroke-width": 2 }));
+  g.appendChild(mk("path", { d: "M-7,-8 h14 M-7,-16 h13", stroke: "#6e5232", "stroke-width": 1.6 }));
+  const sway = mk("g", { class: "decor-sway", style: `animation-delay:${delay.toFixed(2)}s` });
+  sway.appendChild(mk("path", {
+    d: "M0,-26 Q-26,-34 -40,-22 M0,-26 Q-22,-46 -34,-44 M0,-26 Q-8,-54 -16,-56 M0,-26 Q8,-54 16,-56 M0,-26 Q22,-46 34,-44 M0,-26 Q26,-34 40,-22",
+    fill: "none", stroke: "#4f7d45", "stroke-width": 4.5, "stroke-linecap": "round",
+  }));
+  sway.appendChild(mk("path", {
+    d: "M0,-26 Q-14,-48 -24,-50 M0,-26 Q14,-48 24,-50 M0,-26 Q0,-56 0,-58",
+    fill: "none", stroke: "#659259", "stroke-width": 3.5, "stroke-linecap": "round",
+  }));
+  g.appendChild(sway);
+  parent.appendChild(g);
+}
+function addTreeFern(parent, x, y, scale, delay) {
+  const g = mk("g", { transform: `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${scale.toFixed(2)})` });
+  g.appendChild(mk("ellipse", { cx: 0, cy: 3, rx: 20, ry: 6, fill: "rgba(43,54,37,0.13)" }));
+  g.appendChild(mk("path", { d: "M0,0 C-3,-30 3,-58 0,-86", fill: "none", stroke: "#7a5a33", "stroke-width": 9, "stroke-linecap": "round" }));
+  g.appendChild(mk("path", { d: "M-4,-18 h8 M-4,-36 h9 M-4,-54 h8 M-4,-70 h8", stroke: "#5f4426", "stroke-width": 2, "stroke-linecap": "round" }));
+  const sway = mk("g", { class: "decor-sway", style: `animation-delay:${delay.toFixed(2)}s` });
+  sway.appendChild(mk("path", {
+    d: "M0,-86 Q-30,-92 -48,-74 M0,-86 Q-28,-106 -46,-102 M0,-86 Q-10,-114 -22,-118 M0,-86 Q10,-114 22,-118 M0,-86 Q28,-106 46,-102 M0,-86 Q30,-92 48,-74",
+    fill: "none", stroke: "#548249", "stroke-width": 5, "stroke-linecap": "round",
+  }));
+  sway.appendChild(mk("path", {
+    d: "M-24,-96 l-8,-7 M-30,-88 l-9,-3 M24,-96 l8,-7 M30,-88 l9,-3 M-8,-106 l-5,-9 M8,-106 l5,-9",
+    fill: "none", stroke: "#6fa15e", "stroke-width": 2.6, "stroke-linecap": "round",
+  }));
+  g.appendChild(sway);
+  parent.appendChild(g);
+}
+function buildGroves() {
+  const groves = [
+    { at: [392, 134], mix: ["tf", "cy"] },
+    { at: [246, 942], mix: ["cy", "tf", "cy"] },
+    { at: [1338, 668], mix: ["tf", "cy", "tf"] },
+  ];
+  const rand = mulberry32(6151219);
+  for (const grove of groves) {
+    let placed = 0;
+    for (let i = 0; i < grove.mix.length; i++) {
+      for (let tries = 0; tries < 24; tries++) {
+        const x = grove.at[0] + (rand() * 2 - 1) * 62;
+        const y = grove.at[1] + (rand() * 2 - 1) * 44;
+        if (!feltClear(x, y, 42)) continue;
+        if (placedDecor.some((p) => Math.hypot(p.x - x, p.y - y) < p.r + 30)) continue;
+        const sc = 0.78 + rand() * 0.34, delay = -rand() * 6;
+        if (grove.mix[i] === "cy") addCycad(decorLayer, x, y, sc, delay);
+        else addTreeFern(decorLayer, x, y, sc, delay);
+        placedDecor.push({ x, y, r: 34 });
+        placed++;
+        break;
+      }
+    }
+  }
+}
+
+/* ---------- The dig site: someone is excavating ---------- */
+
+function buildDigSite() {
+  const spots = [[332, 948], [1252, 994], [252, 182]];
+  let sx = -1, sy = -1;
+  for (const [cx, cy] of spots) {
+    if (feltClear(cx, cy, 68) && !placedDecor.some((p) => Math.hypot(p.x - cx, p.y - cy) < p.r + 78)) { sx = cx; sy = cy; break; }
+  }
+  if (sx < 0) return;
+  const g = mk("g", { transform: `translate(${sx},${sy})` });
+  g.appendChild(mk("path", { d: blobPath(0, 0, 96, 56, 2.6), fill: "#ead9ae", stroke: "#cdb582", "stroke-width": 2.5 }));
+  for (const [dx, dy] of [[-62, -14], [-30, 24], [8, -30], [46, 18], [70, -8], [-8, 4]]) {
+    g.appendChild(mk("circle", { cx: dx, cy: dy, r: 2.1, fill: "#d9c294" }));
+  }
+  // a long bone still half in the ground: its middle hides under the sand
+  const bone = mk("g", { transform: "translate(-34,-6) rotate(-18)" });
+  bone.appendChild(mk("path", { d: "M-24,0 L22,0", fill: "none", stroke: "#b3a077", "stroke-width": 11.5, "stroke-linecap": "round" }));
+  bone.appendChild(mk("path", { d: "M-24,0 L22,0", fill: "none", stroke: "#f2ead0", "stroke-width": 9, "stroke-linecap": "round" }));
+  for (const cx of [-27, 27]) {
+    bone.appendChild(mk("circle", { cx, cy: -4.5, r: 6, fill: "#f2ead0", stroke: "#b3a077", "stroke-width": 1.4 }));
+    bone.appendChild(mk("circle", { cx, cy: 4.5, r: 6, fill: "#f2ead0", stroke: "#b3a077", "stroke-width": 1.4 }));
+  }
+  bone.appendChild(mk("path", { d: "M-13,-10 h26 v20 h-26 Z", fill: "#ead9ae" }));
+  g.appendChild(bone);
+  // ribs breaking the surface
+  g.appendChild(mk("path", { d: "M18,16 q6,-20 16,-24 M34,18 q6,-18 15,-22 M50,18 q5,-15 13,-19", fill: "none", stroke: "#b3a077", "stroke-width": 7, "stroke-linecap": "round" }));
+  g.appendChild(mk("path", { d: "M18,16 q6,-20 16,-24 M34,18 q6,-18 15,-22 M50,18 q5,-15 13,-19", fill: "none", stroke: "#f2ead0", "stroke-width": 4.4, "stroke-linecap": "round" }));
+  // the paleontologist's brush, left mid-job
+  const brush = mk("g", { transform: "translate(28,-30) rotate(24)" });
+  brush.appendChild(mk("rect", { x: -2.5, y: -16, width: 5, height: 20, rx: 2.2, fill: "#8d6745", stroke: "#5f3717", "stroke-width": 1.4 }));
+  brush.appendChild(mk("path", { d: "M-4,4 h8 l2,9 q-6,3 -12,0 Z", fill: "#caa36b", stroke: "#9c7a4a", "stroke-width": 1.4 }));
+  g.appendChild(brush);
+  decorLayer.appendChild(g);
+  placedDecor.push({ x: sx, y: sy, r: 108 });
+}
+
 /* the Meganeura, perched on a boulder — a table is no place for flying */
 function buildPerchedBug() {
   const rand = mulberry32(80217);
@@ -1007,6 +1202,85 @@ function makeVehicle(kind, animal, liveryIdx = 0) {
   underLayer.appendChild(el);
   vehicles.push(v);
   return v;
+}
+
+/* ---------- Wild dinos: little figurines that graze beside the line ---------- */
+
+const FIGURES = [
+  {
+    id: "niger", name: "Nigersaurus", note: 196,
+    fact: "Nigersaurus had a wide, straight muzzle with about 500 tiny teeth — it grazed like a prehistoric lawnmower.",
+    anchor: { x: 52, y: 40 },
+    art: `
+      <ellipse cx="60" cy="26" rx="28" ry="15" fill="#9aae7a" stroke="#2c2418" stroke-width="2"></ellipse>
+      <path d="M86,22 Q106,14 114,22" stroke="#2c2418" stroke-width="9" fill="none" stroke-linecap="round"></path>
+      <path d="M86,22 Q106,14 114,22" stroke="#9aae7a" stroke-width="6" fill="none" stroke-linecap="round"></path>
+      <rect x="46" y="36" width="9" height="17" rx="4" fill="#8a9e6c" stroke="#2c2418" stroke-width="1.6"></rect>
+      <rect x="68" y="36" width="9" height="17" rx="4" fill="#8a9e6c" stroke="#2c2418" stroke-width="1.6"></rect>
+      <g class="fig-graze">
+        <path d="M38,20 Q18,26 12,42" stroke="#2c2418" stroke-width="11" fill="none" stroke-linecap="round"></path>
+        <path d="M38,20 Q18,26 12,42" stroke="#9aae7a" stroke-width="8" fill="none" stroke-linecap="round"></path>
+        <ellipse cx="10" cy="46" rx="10" ry="6.5" fill="#9aae7a" stroke="#2c2418" stroke-width="1.8"></ellipse>
+        <rect x="-3" y="42.5" width="11" height="8" rx="3.4" fill="#8a9e6c" stroke="#2c2418" stroke-width="1.6"></rect>
+        <circle class="blink" cx="12" cy="43.5" r="1.5" fill="#111"></circle>
+      </g>
+      <path d="M-1,54 l2,-8 M3,54 l1,-7 M7,54 l2,-8" stroke="#587c47" stroke-width="2" stroke-linecap="round"></path>
+    `,
+  },
+  {
+    id: "compy", name: "Compsognathus", note: 1244.5,
+    fact: "Compsognathus was one of the smallest dinosaurs — about the size of a chicken, and quick as one too.",
+    anchor: { x: 32, y: 26 },
+    art: `
+      <ellipse cx="36" cy="22" rx="15" ry="8.5" fill="#cf9a5e" stroke="#2c2418" stroke-width="2"></ellipse>
+      <path d="M49,20 Q64,12 69,18" stroke="#2c2418" stroke-width="6" fill="none" stroke-linecap="round"></path>
+      <path d="M49,20 Q64,12 69,18" stroke="#cf9a5e" stroke-width="3.6" fill="none" stroke-linecap="round"></path>
+      <path d="M30,29 L27,41 M42,29 L45,41" stroke="#2c2418" stroke-width="3.6" stroke-linecap="round"></path>
+      <path d="M30,29 L27,41 M42,29 L45,41" stroke="#b8854c" stroke-width="1.8" stroke-linecap="round"></path>
+      <g class="fig-peck">
+        <path d="M26,17 Q19,10 17,6" stroke="#2c2418" stroke-width="6.5" fill="none" stroke-linecap="round"></path>
+        <path d="M26,17 Q19,10 17,6" stroke="#cf9a5e" stroke-width="4" fill="none" stroke-linecap="round"></path>
+        <ellipse cx="16" cy="4" rx="6.5" ry="5" fill="#cf9a5e" stroke="#2c2418" stroke-width="1.8"></ellipse>
+        <path d="M10,3 L3,5 L11,7 Z" fill="#a8743d" stroke="#2c2418" stroke-width="1.2" stroke-linejoin="round"></path>
+        <circle class="blink" cx="17" cy="3" r="1.3" fill="#111"></circle>
+      </g>
+    `,
+  },
+];
+
+function makeFigure(def) {
+  const el = document.createElementNS(SVG_NS, "g");
+  el.classList.add("figure");
+  el.innerHTML = def.art;
+  const v = {
+    kind: "figure", animal: def, el, anchor: def.anchor,
+    state: "felt", pos: { e: 0, s: 0, dir: 1 }, facing: 1,
+    mir: 0, mirA: 0, hx: 300, hy: 300, slot: null, train: null,
+    rolling: false, world: null, rp: null, livery: 0, pers: 1,
+  };
+  el.addEventListener("pointerdown", (e) => grab(e, v));
+  dragLayer.appendChild(el);
+  vehicles.push(v);
+  return v;
+}
+function placeFigures() {
+  const clearSpot = (x, y) =>
+    feltClear(x, y, 48) && !placedDecor.some((p) => Math.hypot(p.x - x, p.y - y) < p.r + 54);
+  for (const def of FIGURES) {
+    const v = makeFigure(def);
+    let ok = false;
+    for (let tries = 0; tries < 220 && !ok; tries++) {
+      const x = 150 + Math.random() * (TABLE_W - 320), y = 150 + Math.random() * (VB_H - 300);
+      if (clearSpot(x, y)) { v.hx = x; v.hy = y; ok = true; }
+    }
+    // a stubborn table gets a patient sweep instead of a dino on the rails
+    for (let y = 170; y < VB_H - 140 && !ok; y += 55) {
+      for (let x = 160 + (y % 110), xEnd = TABLE_W - 170; x < xEnd && !ok; x += 55) {
+        if (clearSpot(x, y)) { v.hx = x; v.hy = y; ok = true; }
+      }
+    }
+    if (ok) placedDecor.push({ x: v.hx, y: v.hy, r: 44 });
+  }
 }
 
 /* ---------- Rendering one sprite (with the mirror flip) ---------- */
@@ -1338,6 +1612,23 @@ window.addEventListener("pointerup", (e) => {
     return;
   }
   v.el.classList.remove("held");
+  if (v.kind === "figure") {
+    // wild dinos live on the felt: keep them off the rails and out of the tray
+    let x = Math.min(pointer.x, TRAY_X - 80), y = Math.max(95, Math.min(VB_H - 75, pointer.y));
+    if (trackClearance(x, y) < 56 || !lakeClear(x, y, 14)) {
+      outer:
+      for (let r = 40; r <= 240; r += 28) {
+        for (let a = 0; a < 12; a++) {
+          const cx = x + Math.cos(a * 0.524) * r, cy = y + Math.sin(a * 0.524) * r;
+          if (cx > 105 && cx < TRAY_X - 80 && cy > 95 && cy < VB_H - 75 &&
+              trackClearance(cx, cy) > 56 && lakeClear(cx, cy, 14)) { x = cx; y = cy; break outer; }
+        }
+      }
+    }
+    v.state = "felt";
+    v.hx = x; v.hy = y;
+    return;
+  }
   if (pointer.x > TRAY_X - 30) {
     takeSlot(v);
     v.mir = 0; v.mirA = 0;
@@ -1461,6 +1752,7 @@ function ambientStart() {
     if (g.state !== "felt") takeSlot(g);
   }
   while (ai < ANIMALS.length) takeSlot(makeVehicle("car", animals[ai++]));
+  placeFigures();
   for (const v of vehicles) {
     if (v.state !== "track") continue;
     const ang = mod(posAt(v.pos.e, v.pos.s).angle + (v.facing < 0 ? 180 : 0) + 180, 360) - 180;
@@ -1484,6 +1776,10 @@ buildFlyover();
 buildPlatform();
 buildLevers();
 buildSign();
+buildMountain();
+buildVolcano();
+buildDigSite();
+buildGroves();
 buildDecor();
 buildPerchedBug();
 buildTray();
@@ -1505,10 +1801,15 @@ function frame(timestamp) {
   for (const t of TRAINS) {
     const eng = t.engine;
     if (eng.state !== "track") continue;
+    if (zoneKindAt(eng.pos.e, eng.pos.s, 10) === "tunnel") continue;   // no smoke from inside the rock
     if (t.lastSpeed > 4 || t.strain > 0.5) {
       t.smokeT -= dt;
       if (t.smokeT <= 0) { emitPuff(eng); t.smokeT = 0.16 - t.strain * 0.09; }
     }
+  }
+  if (VOLCANO.ok) {
+    VOLCANO.t -= dt;
+    if (VOLCANO.t <= 0) { volcanoPuff(); VOLCANO.t = 42 + Math.random() * 55; }
   }
   updatePuffs(dt);
   requestAnimationFrame(frame);

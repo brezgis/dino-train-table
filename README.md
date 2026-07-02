@@ -11,7 +11,10 @@ Just open `index.html`.
 ## Things a hand can do
 
 - **Pick anything up** and put it somewhere else — on a rail, on the felt,
-  or back in the tray.
+  or back in the tray. The wild dinosaurs grazing on the felt move too.
+- **Tap an engine** and its whole train turns around and heads back the
+  other way.
+- **Tap an animal** and a little caption below the table introduces it.
 - **Tap a switch lever** (the yellow-knobbed pins at the junctions) to choose
   where the track sends the trains.
 - Drop cars **behind** an engine and they couple on. Leave them **in front**
@@ -20,5 +23,6 @@ Just open `index.html`.
   The smaller one backs down.
 - A lever flipped under a moving train splits it. This is a feature, as
   anyone who grew up with a wooden train set knows.
+- The volcano is mostly dormant. Mostly.
 
 Plain SVG and one script. No dependencies, no build.
