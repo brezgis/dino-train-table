@@ -421,57 +421,104 @@ function shuffled(arr) {
 }
 
 /* ---------- The track network ----------
-   A little graph of wooden track. Nodes are junctions; every edge that meets a
-   node arrives along the node's tangent line (one sign or the other), which is
-   what makes the joints read as real turnouts. Trains may run either way along
-   any edge; at a junction you can only continue onto a branch that leaves on
-   the opposite side of the tangent — no hairpins, just like wooden track.
+   Built the way a real wooden set is built: out of pieces. Every edge below is
+   a chain of standard parts laid end to end by a little turtle, and the whole
+   layout closes exactly — no bent rails, no track through track.
 
-   The layout: a meandering outer loop, two S-curve connectors crossing at a
-   lake in the middle (a low causeway under a tall flyover), and a two-track
-   station along the bottom. Six junctions, each with a tappable lever. */
+     straight  — any of the usual lengths
+     curve     — ONE radius (R), always an eighth of a circle (45°)
+     switch    — a straight leg plus a curved leg (the same 45° curve)
+     ramp      — a straight that climbs to (or down from) bridge height
+     bridge    — a straight span carried on piers
+
+   The layout: an oval (a trestle over the lake on the west, a tunnel through
+   the mountain on the east) with an X of two diagonals across the middle. The
+   diagonals meet at right angles, so they cannot share a flat crossing and
+   stay out of each other's way: the "climb" goes up a ramp, over the "dive" on
+   a bridge, and back down. Along the bottom a passing siding makes a two-track
+   station. Six switches, each with a tappable lever.
+
+   Trains may run either way along any edge; at a junction they can only carry
+   on onto a branch leaving on the opposite side — no hairpins, just like
+   wooden track. */
 
 /*GEOM-BEGIN*/
+const R = 216;                              // the one curve radius
+const S45 = Math.SQRT1_2;
+const F = R * S45;                          // a 45° curve's reach; also a switch's straight leg
+const LAT = R * (1 - S45);                  // a 45° curve's sideways step
+const LV = 230;                             // straight on each end of the oval (lake trestle / tunnel)
+const LIFT = 70;                            // bridge deck height: enough for a train to pass under
+const X_L = 116, Y_T = 175;                 // west side of the oval, top straight
+const H = 2 * R + LV;                       // top straight to bottom straight
+const DIAG = (H - 2 * LAT) / S45;           // the straight run of each diagonal
+const XSPAN = 2 * F + DIAG * S45;           // how far east a diagonal gets
+const Y_B = Y_T + H;
+const X_A = X_L + R + F;                    // both diagonals start one straight in from the west curves
+const X_C = X_A + XSPAN;
+const MID = XSPAN - 2 * F;                  // straight between two switches' straight legs
+const RAMP = 270, SPAN = DIAG - 2 * RAMP;   // the climb: ramp up, bridge, ramp down
+
 const NODES = {
-  A:  { x: 555,  y: 212, deg: 5,   lev: -1 },  // top-west: carry on, or dive SE
-  DN: { x: 1245, y: 224, deg: 3,   lev: -1 },  // top-east: the climb rejoins the top
-  C:  { x: 1385, y: 882, deg: 14,  lev: 1 },   // bottom-east: the dive lands here
-  P1: { x: 1120, y: 886, deg: 2,   lev: 1 },   // station, east throat
-  P2: { x: 645,  y: 880, deg: -3,  lev: 1 },   // station, west throat
-  B:  { x: 300,  y: 705, deg: -83, lev: -1 },  // left side: up and over, or climb away NE
+  A:  { x: X_A,     y: Y_T, deg: 0, lev: -1 },  // top-west: carry on, or dive SE
+  DN: { x: X_C,     y: Y_T, deg: 0, lev: -1 },  // top-east: the climb comes back down here
+  B:  { x: X_A,     y: Y_B, deg: 0, lev: -1 },  // bottom-west: carry on, or climb NE
+  C:  { x: X_C,     y: Y_B, deg: 0, lev: -1 },  // bottom-east: the dive lands here
+  P2: { x: X_A - F, y: Y_B, deg: 0, lev: 1 },   // station, west throat
+  P1: { x: X_C + F, y: Y_B, deg: 0, lev: 1 },   // station, east throat
 };
 
+// pieces: ["S", len] straight · ["C", ±45] curve (+ turns right/clockwise) · ["U", len, h0, h1] ramp/bridge
 const EDGE_DEFS = [
-  { id: "top",   a: "A",  b: "DN", via: [[830, 178], [1070, 208]] },
-  { id: "right", a: "DN", b: "C",  via: [[1490, 262], [1652, 432], [1662, 660], [1520, 822]] },
-  { id: "bse",   a: "C",  b: "P1", via: [[1250, 892]] },
-  { id: "stn",   a: "P1", b: "P2", via: [[965, 826], [800, 824]] },   // station, near track
-  { id: "sts",   a: "P1", b: "P2", via: [[965, 946], [800, 944]] },   // station, far track
-  { id: "bsw",   a: "P2", b: "B",  via: [[475, 862], [340, 805]] },
-  { id: "left",  a: "B",  b: "A",  via: [[262, 522], [296, 338], [415, 246]] },
-  { id: "dive",  a: "A",  b: "C",  via: [[690, 300], [795, 478], [930, 610], [1080, 730], [1230, 830]] },
-  { id: "climb", a: "B",  b: "DN", via: [[340, 620], [470, 540], [640, 498], [810, 458], [975, 398], [1100, 310]] },
+  { id: "top",   a: "A",  b: "DN", head: 0,   pieces: [["S", F], ["S", MID / 2], ["S", MID / 2], ["S", F]] },
+  { id: "left",  a: "A",  b: "P2", head: 180, pieces: [["S", F], ["C", -45], ["C", -45], ["S", LV], ["C", -45], ["C", -45]] },
+  { id: "right", a: "DN", b: "P1", head: 0,   pieces: [["S", F], ["C", 45], ["C", 45], ["S", LV], ["C", 45], ["C", 45]] },
+  { id: "bw",    a: "P2", b: "B",  head: 0,   pieces: [["S", F]] },
+  { id: "stn",   a: "B",  b: "C",  head: 0,   pieces: [["S", F], ["S", MID / 2], ["S", MID / 2], ["S", F]] },   // station, platform track
+  { id: "be",    a: "C",  b: "P1", head: 0,   pieces: [["S", F]] },
+  { id: "sts",   a: "P2", b: "P1", head: 0,   pieces: [["C", 45], ["C", -45], ["S", MID / 2], ["S", MID / 2], ["C", -45], ["C", 45]] },   // station, siding
+  { id: "dive",  a: "A",  b: "C",  head: 0,   pieces: [["C", 45], ["S", DIAG / 3], ["S", DIAG / 3], ["S", DIAG / 3], ["C", -45]] },
+  { id: "climb", a: "B",  b: "DN", head: 0,   pieces: [["C", -45], ["U", RAMP, 0, LIFT], ["U", SPAN, LIFT, LIFT], ["U", RAMP, LIFT, 0], ["C", 45]] },
 ];
 
-// open Catmull-Rom through q[1..m-2]; q[0] and q[m-1] are phantom tangent handles
-function catmullOpen(q, per) {
-  const out = [], m = q.length;
-  for (let i = 1; i < m - 2; i++) {
-    const p0 = q[i - 1], p1 = q[i], p2 = q[i + 1], p3 = q[i + 2];
-    for (let k = 0; k < per; k++) {
-      const t = k / per, t2 = t * t, t3 = t2 * t;
-      out.push({
-        x: 0.5 * (2 * p1[0] + (-p0[0] + p2[0]) * t + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3),
-        y: 0.5 * (2 * p1[1] + (-p0[1] + p2[1]) * t + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3),
-      });
+const EDGES = [];
+function layPieces(def) {
+  const na = NODES[def.a];
+  let x = na.x, y = na.y, h = def.head * RAD, s = 0;
+  const pts = [{ x, y }], cum = [0], joints = [], lifts = [];
+  const STEP = 6;
+  for (const pc of def.pieces) {
+    if (pc[0] === "C") {
+      const turn = pc[1] * RAD, sgn = Math.sign(turn);
+      const len = R * Math.abs(turn), n = Math.max(2, Math.ceil(len / STEP));
+      // centre of the arc sits R off to the turning side
+      const cx = x - Math.sin(h) * R * sgn, cy = y + Math.cos(h) * R * sgn;
+      const a0 = Math.atan2(y - cy, x - cx);
+      for (let k = 1; k <= n; k++) {
+        const a = a0 + (turn * k) / n;
+        pts.push({ x: cx + Math.cos(a) * R, y: cy + Math.sin(a) * R });
+        cum.push(s + (len * k) / n);
+      }
+      x = pts[pts.length - 1].x; y = pts[pts.length - 1].y; h += turn; s += len;
+    } else {
+      const len = pc[1], n = Math.max(1, Math.ceil(len / STEP));
+      for (let k = 1; k <= n; k++) {
+        pts.push({ x: x + Math.cos(h) * (len * k) / n, y: y + Math.sin(h) * (len * k) / n });
+        cum.push(s + (len * k) / n);
+      }
+      if (pc[0] === "U") lifts.push({ s0: s, s1: s + len, h0: pc[2], h1: pc[3] });
+      x += Math.cos(h) * len; y += Math.sin(h) * len; s += len;
     }
+    joints.push(s);
   }
-  const last = q[m - 2];
-  out.push({ x: last[0], y: last[1] });
-  return out;
+  joints.pop();   // the last joint is the far node
+  const nb = NODES[def.b];
+  const miss = Math.hypot(x - nb.x, y - nb.y), skew = Math.abs(Math.sin(h - nb.deg * RAD));
+  if (miss > 0.5 || skew > 1e-6) console.warn(`track ${def.id} does not close: ${miss.toFixed(2)}px off, ${(Math.asin(skew) / RAD).toFixed(2)}° skew`);
+  pts[pts.length - 1] = { x: nb.x, y: nb.y };
+  return { pts, cum, joints, lifts };
 }
 
-const EDGES = [];
 function buildGraph() {
   for (const id in NODES) {
     const n = NODES[id];
@@ -482,24 +529,13 @@ function buildGraph() {
   }
   EDGE_DEFS.forEach((def, idx) => {
     const na = NODES[def.a], nb = NODES[def.b];
-    const ctrl = [[na.x, na.y], ...def.via, [nb.x, nb.y]];
-    // phantom handles force the spline to leave/arrive EXACTLY along each node's
-    // tangent: Catmull-Rom's end tangent is (next - phantom)/2, so the phantom is
-    // the next control point reflected through the node's tangent line
-    const dA = Math.hypot(ctrl[1][0] - na.x, ctrl[1][1] - na.y);
-    const sgA = ((ctrl[1][0] - na.x) * na.tx + (ctrl[1][1] - na.y) * na.ty) >= 0 ? 1 : -1;
-    const dB = Math.hypot(nb.x - ctrl[ctrl.length - 2][0], nb.y - ctrl[ctrl.length - 2][1]);
-    const sgB = ((nb.x - ctrl[ctrl.length - 2][0]) * nb.tx + (nb.y - ctrl[ctrl.length - 2][1]) * nb.ty) >= 0 ? 1 : -1;
-    const q = [
-      [ctrl[1][0] - na.tx * sgA * 2 * dA, ctrl[1][1] - na.ty * sgA * 2 * dA],
-      ...ctrl,
-      [ctrl[ctrl.length - 2][0] + nb.tx * sgB * 2 * dB, ctrl[ctrl.length - 2][1] + nb.ty * sgB * 2 * dB],
-    ];
-    const pts = catmullOpen(q, 22);
-    const cum = [0];
-    for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y));
-    const E = { id: def.id, idx, aNode: def.a, bNode: def.b, pts, cum, len: cum[cum.length - 1], zones: [] };
+    const { pts, cum, joints, lifts } = layPieces(def);
+    const E = { id: def.id, idx, aNode: def.a, bNode: def.b, pts, cum, len: cum[cum.length - 1], joints, zones: [] };
     EDGES.push(E);
+    if (lifts.length) {
+      const s0 = lifts[0].s0, s1 = lifts[lifts.length - 1].s1;
+      E.zones.push({ kind: "fly", s: (s0 + s1) / 2, half: (s1 - s0) / 2, lift: LIFT, ramp: RAMP });
+    }
     // register the two attachments (ports) on their nodes
     const dirA = { x: (pts[1].x - pts[0].x), y: (pts[1].y - pts[0].y) };
     const dirB = { x: (pts[pts.length - 2].x - pts[pts.length - 1].x), y: (pts[pts.length - 2].y - pts[pts.length - 1].y) };
@@ -510,46 +546,18 @@ function buildGraph() {
     const n = NODES[id];
     const plus = n.branches.filter((b) => b.side > 0), minus = n.branches.filter((b) => b.side < 0);
     n.choices = plus.length === 2 ? plus : minus.length === 2 ? minus : null;
+    // straight leg first on every switch, so lever position 0 always means "straight on"
+    const curved = (b) => { const pcs = EDGE_DEFS[b.edgeIdx].pieces; return pcs[b.end === "a" ? 0 : pcs.length - 1][0] === "C" ? 1 : 0; };
+    if (n.choices) n.choices.sort((p, q) => curved(p) - curved(q));
   }
 }
 buildGraph();
 
 const edgeByName = (name) => EDGES.find((e) => e.id === name);
 
-/* the two connectors cross once: that point gets the lake, a causeway and a flyover */
-function segInt(ax, ay, bx, by, cx, cy, ex, ey) {
-  const r1x = bx - ax, r1y = by - ay, r2x = ex - cx, r2y = ey - cy, den = r1x * r2y - r1y * r2x;
-  if (Math.abs(den) < 1e-9) return null;
-  const t = ((cx - ax) * r2y - (cy - ay) * r2x) / den, u = ((cx - ax) * r1y - (cy - ay) * r1x) / den;
-  if (t > 0 && t < 1 && u > 0 && u < 1) return { t, u };
-  return null;
-}
-function findCrossing() {
-  const d = edgeByName("dive"), c = edgeByName("climb");
-  for (let i = 0; i < d.pts.length - 1; i++) {
-    for (let j = 0; j < c.pts.length - 1; j++) {
-      const r = segInt(d.pts[i].x, d.pts[i].y, d.pts[i + 1].x, d.pts[i + 1].y,
-                       c.pts[j].x, c.pts[j].y, c.pts[j + 1].x, c.pts[j + 1].y);
-      if (r) {
-        return {
-          x: d.pts[i].x + (d.pts[i + 1].x - d.pts[i].x) * r.t,
-          y: d.pts[i].y + (d.pts[i + 1].y - d.pts[i].y) * r.t,
-          sDive: d.cum[i] + (d.cum[i + 1] - d.cum[i]) * r.t,
-          sClimb: c.cum[j] + (c.cum[j + 1] - c.cum[j]) * r.u,
-        };
-      }
-    }
-  }
-  return null;
-}
-const CROSS = findCrossing();
-if (CROSS) {
-  edgeByName("climb").zones.push({ s: CROSS.sClimb, half: 200, lift: 54, kind: "fly" });
-}
-
-/* the water sits under the left loop and runs off the table edge, cut off by
-   the frame — the outer track crosses it on a low causeway */
-const LAKE = { x: 132, y: 452, rx: 256, ry: 204 };
+/* the water sits under the west end of the oval and runs off the table edge,
+   cut off by the frame — the track crosses it on a low trestle */
+const LAKE = { x: 40, y: Y_T + H / 2, rx: 232, ry: 222 };
 (function waterZone() {
   const E = edgeByName("left");
   const inside = (p) => {
@@ -561,12 +569,12 @@ const LAKE = { x: 132, y: 452, rx: 256, ry: 204 };
     if (inside(E.pts[i])) { if (s0 < 0) s0 = E.cum[i]; s1 = E.cum[i]; }
   }
   if (s0 < 0) return;
-  const lo = Math.max(60, s0 - 55), hi = Math.min(E.len - 60, s1 + 55);
-  if (hi > lo) E.zones.push({ s: (lo + hi) / 2, half: (hi - lo) / 2, lift: 20, kind: "cause" });
+  const lo = Math.max(60, s0 - 50), hi = Math.min(E.len - 60, s1 + 50);
+  if (hi > lo) E.zones.push({ kind: "cause", s: (lo + hi) / 2, half: (hi - lo) / 2, lift: 16, ramp: 60 });
 })();
 
-/* the mountain tunnel: trains disappear behind the rock where the right-end
-   track runs along the table's east edge */
+/* the mountain tunnel: trains disappear under the rock where the east end of
+   the oval runs along the table's edge */
 (function tunnelZone() {
   const E = edgeByName("right");
   let s0 = -1, s1 = -1;
@@ -574,7 +582,7 @@ const LAKE = { x: 132, y: 452, rx: 256, ry: 204 };
     if (E.pts[i].x > 1608) { if (s0 < 0) s0 = E.cum[i]; s1 = E.cum[i]; }
   }
   if (s0 < 0) return;
-  E.zones.push({ s: (s0 + s1) / 2, half: Math.min(170, (s1 - s0) / 2), lift: 0, kind: "tunnel" });
+  E.zones.push({ kind: "tunnel", s: (s0 + s1) / 2, half: Math.min(170, (s1 - s0) / 2), lift: 0, ramp: 1 });
 })();
 /*GEOM-END*/
 
@@ -593,7 +601,7 @@ function liftAt(e, s) {
   let m = 0;
   for (const z of EDGES[e].zones) {
     const d = Math.abs(s - z.s);
-    if (d < z.half) m = Math.max(m, z.lift * 0.5 * (1 + Math.cos((Math.PI * d) / z.half)));
+    if (d < z.half) m = Math.max(m, z.lift * Math.min(1, (z.half - d) / z.ramp));
   }
   return m;
 }
@@ -636,17 +644,21 @@ function advance(pos, dist) {
    node. With a table's worth of toys, checking them all is free. */
 function scanAhead(start, maxDist, ignore) {
   const pos = { e: start.e, s: start.s, dir: start.dir };
-  let traveled = 0, guard = 8;
+  let traveled = 0, guard = 8, first = true;
   while (traveled < maxDist && guard-- > 0) {
     const E = EDGES[pos.e];
     const span = Math.min(maxDist - traveled, pos.dir > 0 ? E.len - pos.s : pos.s);
     let best = null;
+    // (after hopping a node, pos sits 0.01 past it: a vehicle standing exactly
+    // on the node still counts)
+    const from = first ? 1e-6 : -0.05;
     for (const v of vehicles) {
       if (v.state !== "track" || v.pos.e !== pos.e) continue;
       if (ignore && ignore.has(v)) continue;
       const d = (v.pos.s - pos.s) * pos.dir;
-      if (d > 1e-6 && d <= span + 1e-6 && (!best || d < best.d)) best = { v, d };
+      if (d > from && d <= span + 1e-6 && (!best || d < best.d)) best = { v, d: Math.max(0, d) };
     }
+    first = false;
     if (best) return { veh: best.v, gap: traveled + best.d, dir: pos.dir };
     traveled += span;
     if (traveled >= maxDist - 1e-6) return null;
@@ -660,8 +672,10 @@ function scanAhead(start, maxDist, ignore) {
 function nearestOnTrack(x, y) {
   let best = 1e18, be = 0, bs = 0;
   for (const E of EDGES) {
+    // measured against the rails as drawn, so the raised bridge deck counts where you see it
+    if (!E.lifted) E.lifted = E.pts.map((p, i) => p.y - liftAt(E.idx, E.cum[i]));
     for (let i = 0; i < E.pts.length; i += 2) {
-      const dx = E.pts[i].x - x, dy = E.pts[i].y - y, d = dx * dx + dy * dy;
+      const dx = E.pts[i].x - x, dy = E.lifted[i] - y, d = dx * dx + dy * dy;
       if (d < best) { best = d; be = E.idx; bs = E.cum[i]; }
     }
   }
@@ -823,36 +837,82 @@ function buildCausewayFor(E, z) {
   }
 }
 
-// the tall flyover that carries the climb over both the water and the causeway
+// the climb's ramp-and-bridge: a wooden ramp up, a span on two piers over the
+// dive, and a ramp back down — the only way two tracks can cross at 90° here
 function buildFlyover() {
   const E = edgeByName("climb"), z = E.zones.find((zz) => zz.kind === "fly");
   if (!z) return;
-  const top = deckPath(E, z, 44);
-  const sh = top.filter((t) => t.li > z.lift * 0.18).map((t) => ({ x: t.x, y: t.y + t.li + 6 }));
-  if (sh.length > 1) archLayer.appendChild(mk("path", { d: dstr(sh), fill: "none", stroke: "rgba(0,0,0,0.16)", "stroke-width": 46, "stroke-linecap": "round" }));
-  const step = Math.max(4, Math.round(top.length / 15));
-  const dive = edgeByName("dive");
-  const onDive = (x, y) => dive.pts.some((p, i) => i % 2 === 0 && Math.hypot(p.x - x, p.y - y) < 48);
-  for (let k = 0; k < top.length; k += step) {
-    const t = top[k]; if (t.li < 8) continue;
-    if (onDive(t.x, t.y + t.li)) continue;   // no post stands on the track below
-    archLayer.appendChild(mk("rect", { x: (t.x - 5).toFixed(1), y: t.y.toFixed(1), width: 10, height: (t.li + 12).toFixed(1), rx: 2, fill: "#8a7550" }));
-    archLayer.appendChild(mk("rect", { x: (t.x - 5).toFixed(1), y: t.y.toFixed(1), width: 4, height: (t.li + 12).toFixed(1), rx: 2, fill: "#a89268" }));
+  const top = deckPath(E, z, 64);
+  // shadow on the felt, under the raised part
+  const sh = top.filter((t) => t.li > 4).map((t) => ({ x: t.x + 4, y: t.y + t.li + 6 }));
+  if (sh.length > 1) archLayer.appendChild(mk("path", { d: dstr(sh), fill: "none", stroke: "rgba(0,0,0,0.15)", "stroke-width": 50, "stroke-linecap": "round" }));
+  // the solid wooden sides of the two ramps (the side that faces the viewer)
+  const side = (t) => (t.ny >= 0 ? 1 : -1) * 31;
+  const spanHalf = SPAN / 2;
+  for (const sgn of [-1, 1]) {
+    const ramp = top.filter((t, k) => {
+      const s = z.s + ((k - 64) / 64) * (z.half + 12);
+      return (s - z.s) * sgn > spanHalf - 1 && t.li > 0.5;
+    });
+    if (ramp.length < 2) continue;
+    const upper = ramp.map((t) => ({ x: t.x + t.nx * side(t), y: t.y + t.ny * side(t) }));
+    const lower = ramp.map((t) => ({ x: t.x + t.nx * side(t), y: t.y + t.li + t.ny * side(t) })).reverse();
+    bridgeLayer.appendChild(mk("path", { d: dstr(upper.concat(lower)) + " Z", fill: "#9c7b4c", stroke: "#6e5232", "stroke-width": 2.5, "stroke-linejoin": "round" }));
+    // plank lines on the ramp side
+    bridgeLayer.appendChild(mk("path", { d: dstr(ramp.map((t) => ({ x: t.x + t.nx * side(t), y: t.y + t.li * 0.5 + t.ny * side(t) }))), fill: "none", stroke: "#86673e", "stroke-width": 2, opacity: "0.8" }));
+  }
+  // two stout piers at the ends of the span, clear of the dive below
+  for (const sgn of [-1, 1]) {
+    const s = z.s + sgn * (spanHalf - 16);
+    const p = posAt(E.idx, s), li = liftAt(E.idx, s), rad = p.angle * RAD;
+    const nx = Math.cos(rad + Math.PI / 2), ny = Math.sin(rad + Math.PI / 2);
+    for (const off of [-24, 24]) {
+      const px = p.x + nx * off, py = p.y + ny * off;
+      bridgeLayer.appendChild(mk("rect", { x: (px - 8).toFixed(1), y: (py - li).toFixed(1), width: 16, height: (li + 4).toFixed(1), rx: 3, fill: "#8a7550", stroke: "#6e5232", "stroke-width": 2 }));
+      bridgeLayer.appendChild(mk("rect", { x: (px - 5).toFixed(1), y: (py - li + 2).toFixed(1), width: 4, height: (li).toFixed(1), rx: 2, fill: "#a89268" }));
+    }
   }
   const d = dstr(top);
   bridgeLayer.appendChild(mk("path", { d, fill: "none", stroke: "#e2bc86", "stroke-width": 68, "stroke-linecap": "butt", "stroke-linejoin": "round" }));
   bridgeLayer.appendChild(mk("path", { d, fill: "none", stroke: "#8a6a3f", "stroke-width": 50, "stroke-linecap": "butt", "stroke-linejoin": "round" }));
   bridgeLayer.appendChild(mk("path", { d, fill: "none", stroke: "#6b4f2a", "stroke-width": 50, "stroke-linecap": "butt", "stroke-dasharray": "6 16", opacity: "0.55" }));
-  const rail = top.filter((t) => t.li > z.lift * 0.12);
+  const rail = top.filter((t) => t.li > 6);
   if (rail.length > 1) {
     bridgeLayer.appendChild(mk("path", { d: dstr(rail.map((p) => ({ x: p.x + p.nx * 31, y: p.y + p.ny * 31 }))), fill: "none", stroke: "#5f4426", "stroke-width": 5.5, "stroke-linecap": "round" }));
     bridgeLayer.appendChild(mk("path", { d: dstr(rail.map((p) => ({ x: p.x - p.nx * 31, y: p.y - p.ny * 31 }))), fill: "none", stroke: "#5f4426", "stroke-width": 5.5, "stroke-linecap": "round" }));
+  }
+  // the joints between the ramp pieces and the span
+  for (const s of E.joints) {
+    const li = liftAt(E.idx, s);
+    if (li <= 0.5) continue;
+    bridgeLayer.appendChild(seamMark(E, s, li));
+  }
+}
+
+/* ---------- Piece joints: where one wooden piece meets the next ---------- */
+
+function seamMark(E, s, li = 0) {
+  const p = posAt(E.idx, s), rad = p.angle * RAD;
+  const nx = Math.cos(rad + Math.PI / 2) * 30, ny = Math.sin(rad + Math.PI / 2) * 30;
+  return mk("path", {
+    d: `M${(p.x + nx).toFixed(1)},${(p.y - li + ny).toFixed(1)} L${(p.x - nx).toFixed(1)},${(p.y - li - ny).toFixed(1)}`,
+    stroke: "#5a3f22", "stroke-width": 3, "stroke-linecap": "round", opacity: "0.6",
+  });
+}
+function buildSeams() {
+  const inZone = (E, s) => E.zones.some((z) => z.kind !== "tunnel" && Math.abs(s - z.s) < z.half);
+  for (const E of EDGES) for (const s of E.joints) if (!inZone(E, s)) switchLayer.appendChild(seamMark(E, s));
+  // every junction is a joint too (the switch piece's single end)
+  for (const id in NODES) {
+    const n = NODES[id], br = n.branches[0];
+    const E = EDGES[br.edgeIdx];
+    switchLayer.appendChild(seamMark(E, br.end === "a" ? 0 : E.len));
   }
 }
 
 /* ---------- Station platform ---------- */
 
-const PLATFORM = { x: 805, y: 866, w: 225, h: 40 };
+const PLATFORM = { x: X_A + (XSPAN - 240) / 2, y: Y_B + LAT - 20, w: 240, h: 40 };   // between the two station tracks
 function buildPlatform() {
   const p = PLATFORM;
   switchLayer.appendChild(mk("rect", { x: p.x + 3, y: p.y + 4, width: p.w, height: p.h, rx: 5, fill: "rgba(43,54,37,0.14)" }));
@@ -885,18 +945,13 @@ function branchTintD(branch, dist = 66) {
   return dstr(pts);
 }
 function buildLevers() {
-  // a smooth wooden pad at every junction hides the tie seams where edges meet
-  for (const id in NODES) {
-    const n = NODES[id];
-    switchLayer.appendChild(mk("circle", { cx: n.x, cy: n.y, r: 24, fill: "#8a6a3f" }));
-  }
   for (const id in NODES) {
     const n = NODES[id];
     if (!n.choices) continue;
     const nx = -n.ty * 52 * n.lev, ny = n.tx * 52 * n.lev;
     const g = mk("g", { class: "lever", transform: `translate(${(n.x + nx).toFixed(1)},${(n.y + ny).toFixed(1)})` });
     const tints = n.choices.map((br) =>
-      mk("path", { d: branchTintD(br), fill: "none", stroke: "#e9c98f", "stroke-width": 12, "stroke-linecap": "round", opacity: "0" }));
+      mk("path", { d: branchTintD(br), fill: "none", stroke: "#e9c98f", "stroke-width": 9, "stroke-linecap": "round", opacity: "0" }));
     tints.forEach((t) => switchLayer.appendChild(t));
     g.appendChild(mk("circle", { cx: 0, cy: 0, r: 13, fill: "#8d6745", stroke: "#5f3717", "stroke-width": 2.5 }));
     g.appendChild(mk("circle", { cx: 0, cy: 0, r: 4, fill: "#5f3717" }));
@@ -904,13 +959,13 @@ function buildLevers() {
     arm.appendChild(mk("rect", { x: 0, y: -3, width: 27, height: 6, rx: 3, fill: "#6b4f2a" }));
     arm.appendChild(mk("circle", { cx: 29, cy: 0, r: 8, fill: "#e8b23e", stroke: "#9c752a", "stroke-width": 2.5 }));
     g.appendChild(arm);
-    g.appendChild(mk("circle", { cx: 0, cy: 0, r: 34, fill: "transparent", class: "lever-hit" }));
+    g.appendChild(mk("circle", { cx: 0, cy: 0, r: 44, fill: "transparent", class: "lever-hit" }));
     switchLayer.appendChild(g);
     const lever = { node: n, arm, tints, angles: n.choices.map(branchAwayAngle) };
     LEVERS.push(lever);
     const apply = () => {
       arm.style.transform = `rotate(${lever.angles[n.sel]}deg)`;
-      tints.forEach((t, i) => t.setAttribute("opacity", i === n.sel ? "0.85" : "0"));
+      tints.forEach((t, i) => t.setAttribute("opacity", i === n.sel ? "0.6" : "0"));
     };
     apply();
     lever.apply = apply;
@@ -999,9 +1054,9 @@ function buildSign() {
   g.appendChild(mk("rect", { x: 0, y: 0, width: w, height: h, rx: 14, fill: "#f5e7bf", stroke: "#8d6745", "stroke-width": 5 }));
   g.appendChild(mk("rect", { x: 11, y: 12, width: w - 22, height: h - 24, rx: 9, fill: "none", stroke: "#3f9392", "stroke-width": 4 }));
   g.appendChild(mk("path", { d: `M${w - 43},20 l7,13 l15,2 l-11,10 l3,15 l-14,-7 l-13,8 l2,-15 l-11,-10 l15,-3 Z`, fill: "#d5a84c", stroke: "#a57936", "stroke-width": 2 }));
-  const t1 = mk("text", { x: w / 2 - 8, y: 47, "text-anchor": "middle", fill: "#315f61", "font-size": 26, "font-weight": 800, "font-family": "Avenir Next, Segoe UI, sans-serif" });
+  const t1 = mk("text", { x: w / 2 - 17, y: 47, "text-anchor": "middle", fill: "#315f61", "font-size": 26, "font-weight": 800, "font-family": "Avenir Next, Segoe UI, sans-serif" });
   t1.textContent = "DINO";
-  const t2 = mk("text", { x: w / 2 - 8, y: 70, "text-anchor": "middle", fill: "#c75f4b", "font-size": 22, "font-weight": 800, "font-family": "Avenir Next, Segoe UI, sans-serif" });
+  const t2 = mk("text", { x: w / 2 - 17, y: 70, "text-anchor": "middle", fill: "#c75f4b", "font-size": 19, "font-weight": 800, "font-family": "Avenir Next, Segoe UI, sans-serif" });
   t2.textContent = "JUNCTION";
   g.appendChild(t1);
   g.appendChild(t2);
@@ -1055,13 +1110,20 @@ function buildVolcano() {
   if (sx < 0) return;
   const g = mk("g", { transform: `translate(${sx},${sy})` });
   g.appendChild(mk("ellipse", { cx: 0, cy: 52, rx: 74, ry: 13, fill: "rgba(43,54,37,0.14)" }));
-  g.appendChild(mk("path", { d: "M-70,50 Q-50,14 -30,-16 Q-15,-31 0,-31 Q15,-31 30,-16 Q50,14 70,50 Q36,58 0,58 Q-36,58 -70,50 Z", fill: "#7c4b3b", stroke: "#5f382c", "stroke-width": 2.5, "stroke-linejoin": "round" }));
-  g.appendChild(mk("path", { d: "M-30,8 Q-22,-8 -12,-20 M0,-24 Q-2,-6 0,8 M30,8 Q22,-8 12,-20", fill: "none", stroke: "#93604c", "stroke-width": 3.5, "stroke-linecap": "round", opacity: "0.8" }));
-  g.appendChild(mk("ellipse", { cx: 0, cy: -31, rx: 22, ry: 7.5, fill: "#4a2c24", stroke: "#3a211b", "stroke-width": 2 }));
-  g.appendChild(mk("ellipse", { cx: 0, cy: -31, rx: 12, ry: 4, fill: "#b4502e" }));
-  g.appendChild(mk("ellipse", { cx: 0, cy: -31.5, rx: 4.5, ry: 1.7, fill: "#e8792f" }));
-  addBoulder(decorLayer, sx - 60, sy + 44, 0.5);
+  // the cone's shoulders run straight up into the crater rim, so the rim sits
+  // ON the cone instead of floating over it like a lid
+  g.appendChild(mk("path", { d: "M-72,50 Q-50,16 -31,-12 Q-24,-22 -22,-31 L22,-31 Q24,-22 31,-12 Q50,16 72,50 Q36,58 0,58 Q-36,58 -72,50 Z", fill: "#7c4b3b", stroke: "#5f382c", "stroke-width": 2.5, "stroke-linejoin": "round" }));
+  g.appendChild(mk("path", { d: "M-32,10 Q-24,-6 -15,-18 M30,10 Q22,-6 13,-18", fill: "none", stroke: "#93604c", "stroke-width": 3.5, "stroke-linecap": "round", opacity: "0.8" }));
+  // a lick of old lava down the front
+  g.appendChild(mk("path", { d: "M3,-27 Q7,-16 4,-6 Q2,2 6,10", fill: "none", stroke: "#b4502e", "stroke-width": 6, "stroke-linecap": "round" }));
+  g.appendChild(mk("path", { d: "M3,-27 Q7,-16 4,-6", fill: "none", stroke: "#e8792f", "stroke-width": 2.4, "stroke-linecap": "round" }));
+  // the crater: a raised lip, a dark pit, a glow at the bottom
+  g.appendChild(mk("ellipse", { cx: 0, cy: -31, rx: 22, ry: 7, fill: "#96604a", stroke: "#5f382c", "stroke-width": 2 }));
+  g.appendChild(mk("ellipse", { cx: 0, cy: -30.5, rx: 15, ry: 4.4, fill: "#4a2c24" }));
+  g.appendChild(mk("ellipse", { cx: 0, cy: -30, rx: 9, ry: 2.6, fill: "#c8562d" }));
+  g.appendChild(mk("ellipse", { cx: 0, cy: -30, rx: 4, ry: 1.2, fill: "#f6a13a" }));
   decorLayer.appendChild(g);
+  addBoulder(decorLayer, sx + 70, sy + 50, 0.5);   // in front of the cone, not half-hidden behind it
   placedDecor.push({ x: sx, y: sy, r: 90 });
   VOLCANO.x = sx; VOLCANO.y = sy; VOLCANO.tipY = sy - 34; VOLCANO.ok = true;
 }
@@ -1124,9 +1186,9 @@ function addTreeFern(parent, x, y, scale, delay) {
 }
 function buildGroves() {
   const groves = [
-    { at: [392, 134], mix: ["tf", "cy"] },
-    { at: [246, 942], mix: ["cy", "tf", "cy"] },
-    { at: [1338, 668], mix: ["tf", "cy", "tf"] },
+    { at: [520, 380], mix: ["tf", "cy"] },
+    { at: [250, 960], mix: ["cy", "tf", "cy"] },
+    { at: [1330, 700], mix: ["tf", "cy", "tf"] },
   ];
   const rand = mulberry32(6151219);
   for (const grove of groves) {
@@ -1151,7 +1213,7 @@ function buildGroves() {
 /* ---------- The dig site: someone is excavating ---------- */
 
 function buildDigSite() {
-  const spots = [[332, 948], [1252, 994], [252, 182]];
+  const spots = [[1590, 975], [180, 975], [930, 1040]];
   let sx = -1, sy = -1;
   for (const [cx, cy] of spots) {
     if (feltClear(cx, cy, 68) && !placedDecor.some((p) => Math.hypot(p.x - cx, p.y - cy) < p.r + 78)) { sx = cx; sy = cy; break; }
@@ -1439,8 +1501,8 @@ function renderSprite(v, x, y, psi, sc) {
   const mir = v.mirA >= 0.5;
   const rot = mir ? psi - 180 : psi;
   const kx = mir ? -k : k;
-  v.el.setAttribute("transform",
-    `translate(${x.toFixed(2)},${y.toFixed(2)}) rotate(${rot.toFixed(2)}) scale(${(kx * sc).toFixed(3)},${sc}) translate(${-ax},${-ay})`);
+  const tf = `translate(${x.toFixed(2)},${y.toFixed(2)}) rotate(${rot.toFixed(2)}) scale(${(kx * sc).toFixed(3)},${sc}) translate(${-ax},${-ay})`;
+  if (tf !== v.tf) { v.el.setAttribute("transform", tf); v.tf = tf; }   // parked toys cost nothing
   v.rp = { x, y, rot, kx: kx * sc, sy: sc };
   v.world = { x, y };
 }
@@ -1456,7 +1518,8 @@ function positionVehicle(v, dt) {
   if (v.state === "track") {
     const p = posAt(v.pos.e, v.pos.s);
     const lift = liftAt(v.pos.e, v.pos.s);
-    let ang = mod(p.angle + (v.facing < 0 ? 180 : 0) + 180, 360) - 180;
+    // facing is relative to pos.dir, so it survives the edge flips at junctions
+    let ang = mod(p.angle + (v.facing * v.pos.dir < 0 ? 180 : 0) + 180, 360) - 180;
     const c = Math.cos(ang * RAD);
     if (v.mir === 0 && c < -0.18) v.mir = 1;
     else if (v.mir === 1 && c > 0.18) v.mir = 0;
@@ -1485,7 +1548,8 @@ function positionVehicle(v, dt) {
   }
   renderSprite(v, x, y, psi, sc);
   if (v.el.parentNode !== targetParent) targetParent.appendChild(v.el);
-  v.el.classList.toggle("rolling", v.state === "track" && v.rolling);
+  const rolling = v.state === "track" && v.rolling;
+  if (rolling !== v.wasRolling) { v.el.classList.toggle("rolling", rolling); v.wasRolling = rolling; }
   v.rolling = false;
 }
 
@@ -1515,8 +1579,8 @@ function coupleCarToTail(t, car, dd, gap) {
   car.pos.dir = dd;
   const delta = gap - SPACING;
   if (delta > 0.5) advance(car.pos, delta);
-  else if (delta < -0.5) { car.pos.dir = -dd; advance(car.pos, -delta); car.pos.dir = dd; }
-  car.facing = dd;
+  else if (delta < -0.5) { car.pos.dir = -dd; advance(car.pos, -delta); car.pos.dir *= -1; }   // (a junction may have flipped the edge sense)
+  car.facing = 1;
   car.train = t;
   t.cars.push(car);
   coupleTone();
@@ -1558,23 +1622,91 @@ function tryAutoCouples(t) {
   }
 }
 
+const WAIT_AT = 235;   // a waiting lead stops this far (along the rails) short of a switch
+const FOUL = 215;      // anything on a switch leg nearer than this overlaps the points
+const GIVE_UP = 8;     // seconds a stuck train waits before backing off
+
+function junctionBlocked(t, lead, ignore) {
+  // look through every switch within WAIT_AT ahead (two switches can sit one
+  // straight apart, and a train must not stop with its nose in the first)
+  const pos = { e: lead.pos.e, s: lead.pos.s, dir: lead.pos.dir };
+  let dist = 0;
+  for (let hop = 0; hop < 4; hop++) {
+    const E = EDGES[pos.e];
+    const dNode = dist + (pos.dir > 0 ? E.len - pos.s : pos.s);
+    if (dNode >= WAIT_AT) return false;
+    const node = NODES[pos.dir > 0 ? E.bNode : E.aNode];
+    const arriving = node.branches.find((b) => b.edgeIdx === pos.e && b.end === (pos.dir > 0 ? "b" : "a"));
+    const out = exitBranch(node, arriving);
+    if (!out) return false;
+    for (const br of node.branches) {
+      if (br === arriving || br === out) continue;   // those are my own lane: the contact scan handles them
+      const E2 = EDGES[br.edgeIdx];
+      for (const v2 of vehicles) {
+        if (v2.state !== "track" || v2.pos.e !== br.edgeIdx || ignore.has(v2)) continue;
+        const d2 = br.end === "a" ? v2.pos.s : E2.len - v2.pos.s;
+        if (d2 > FOUL) continue;
+        if (!v2.train) { shooClear(v2, br, d2); return true; }       // a car left standing on the points
+        if (v2.train.lastSpeed > 5) return true;                     // someone is using the junction
+        if (d2 < dNode - 8 || d2 < FOUL - 40) return true;           // they're nearer, or fouling it
+        if (Math.abs(d2 - dNode) <= 8 && TRAINS.indexOf(v2.train) < TRAINS.indexOf(t)) return true;
+      }
+    }
+    pos.e = out.edgeIdx;
+    pos.s = out.end === "a" ? 0 : EDGES[out.edgeIdx].len;
+    pos.dir = out.end === "a" ? 1 : -1;
+    dist = dNode;
+  }
+  return false;
+}
+
+// a loose car standing on the points gets a nudge down its own leg, clear of
+// the junction (a hand at the table would do the same)
+function shooClear(v, br, d2) {
+  const t = performance.now();
+  if (v.coast || t - (v.shooAt || 0) < 2500) return;
+  v.shooAt = t;
+  const away = br.end === "a" ? 1 : -1;
+  if (v.pos.dir !== away) { v.facing *= -1; v.pos.dir = away; }
+  v.coast = Math.sqrt(2 * COAST_DECEL * (FOUL - d2 + 30));
+  tone(420, 0.05, "square", 0, 0.08);
+}
+
+// is there room to back away? Loose cars behind can be shoved along, but not
+// if the shove would end against another train.
+function canBackOff(t) {
+  const back = t.rev ? t.engine : trainMembers(t)[trainMembers(t).length - 1];
+  const ignore = new Set(trainMembers(t));
+  let probe = { e: back.pos.e, s: back.pos.s, dir: -back.pos.dir };
+  for (let k = 0; k < 6; k++) {
+    const h = scanAhead(probe, CONTACT + 40, ignore);
+    if (!h) return true;
+    if (h.veh.train) return false;
+    ignore.add(h.veh);
+    probe = { e: h.veh.pos.e, s: h.veh.pos.s, dir: h.dir };
+  }
+  return false;
+}
+
 function updateTrains(dt, now) {
   const advanced = new Set();
   for (const v of vehicles) v.pushClaim = null;   // fresh push claims every frame
   for (const t of TRAINS) {
+    if (!t.cars.length) t.rev = false;   // a lone engine always leads with its own nose
     const members = trainMembers(t);
     const ignore = new Set(members);
-    let pushChain = [], other = null, headOn = false;
+    let pushChain = [], other = null, headOn = false, otherGap = 0;
     const lead = frontMember(t);
     let probe = { e: lead.pos.e, s: lead.pos.s, dir: lead.pos.dir };
     let guard = 8;
     while (guard-- > 0) {
       const h = scanAhead(probe, CONTACT + 6, ignore);
       if (!h || h.gap > CONTACT + 4) break;
-      if (h.veh.train && h.veh.train !== t) { other = h.veh.train; headOn = h.veh.pos.dir !== h.dir; break; }
+      if (h.veh.train && h.veh.train !== t) { other = h.veh.train; otherGap = h.gap; headOn = h.veh.pos.dir !== h.dir; break; }
       if (h.veh.pushClaim && h.veh.pushClaim !== t) {
         // another train already has hands on this car — meet THAT train instead
         other = h.veh.pushClaim;
+        otherGap = h.gap;
         headOn = h.veh.pushDir !== h.dir;
         break;
       }
@@ -1583,29 +1715,18 @@ function updateTrains(dt, now) {
       ignore.add(h.veh);
       probe = { e: h.veh.pos.e, s: h.veh.pos.s, dir: h.dir };
     }
-    // junction courtesy: contact scans follow the levers, so a train converging
-    // from the OTHER branch is invisible to them — instead, nobody drives into
-    // a junction while another train is using it (the closer one goes first)
-    let nodeBlock = false;
-    if (!other) {
-      const dNode = lead.pos.dir > 0 ? EDGES[lead.pos.e].len - lead.pos.s : lead.pos.s;
-      if (dNode < 150 && lead.world) {
-        const node = NODES[lead.pos.dir > 0 ? EDGES[lead.pos.e].bNode : EDGES[lead.pos.e].aNode];
-        const myD = Math.hypot(lead.world.x - node.x, lead.world.y - node.y);
-        for (const v2 of vehicles) {
-          if (v2.state !== "track" || !v2.train || ignore.has(v2) || !v2.world) continue;
-          const d2 = Math.hypot(v2.world.x - node.x, v2.world.y - node.y);
-          if (d2 > 150) continue;
-          if (v2.train.lastSpeed > 5 || d2 < myD - 8 ||
-              (Math.abs(d2 - myD) <= 8 && TRAINS.indexOf(v2.train) < TRAINS.indexOf(t))) { nodeBlock = true; break; }
-        }
-      }
-    }
+    // junction courtesy: contact scans follow the levers, so anything on the
+    // switch's OTHER leg is invisible to them — a train converging from it, or
+    // a car standing on it close enough to foul the points. Wait short of the
+    // switch (nose clear of the points) until that leg is clear; between two
+    // trains the one nearer the switch goes first.
+    const nodeBlock = junctionBlocked(t, pushChain.length ? pushChain[pushChain.length - 1].v : lead, ignore);
     t.ramp = Math.min(1, t.ramp + dt / 1.1);
     const wob = 1 + 0.06 * Math.sin(now * t.wobW + t.wobPh);
     const loadMult = Math.max(0, 1 - pushChain.length * 0.17);
     t.strain = 1 - loadMult;
     let sp = SPEED * t.engine.pers * wob * t.ramp * loadMult;
+    let followCap = Infinity;
     if (other) {
       if (headOn) {
         sp = 0; t.strain = 1;
@@ -1613,17 +1734,25 @@ function updateTrains(dt, now) {
         t.headOnT += dt;
         // after a stubborn standoff, the smaller train gives way and backs off
         if (t.headOnT > 3.4) {
+          // (unless it is boxed in from behind — then the other one has to)
           const theirs = 1 + other.cars.length;
-          if (members.length < theirs || (members.length === theirs && t.wobPh <= other.wobPh)) {
+          const smaller = members.length < theirs || (members.length === theirs && t.wobPh <= other.wobPh);
+          const mine = canBackOff(t), them = canBackOff(other);
+          if ((mine && (smaller || !them)) || (t.headOnT > 9 && smaller)) {
             reverseTrain(t);
             t.scoot = 0.45;
             t.headOnT = -1.5; other.headOnT = -1.5;
           }
         }
       } else {
-        if (t.contact !== other) { playClack(); other.scoot = 0.5; }
+        // only a real bump (catching up at speed) clacks and nudges the one in front;
+        // two trains simply running nose-to-tail stay quiet
+        if (t.contact !== other && t.lastSpeed - other.lastSpeed > 25 && now - (t.clackAt || 0) > 1.2) {
+          playClack(); other.scoot = Math.max(other.scoot, 0.5); t.clackAt = now;
+        }
         if (t.headOnT > 0) t.headOnT = 0;   // the standoff ended some other way
-        sp = Math.min(sp, Math.max(0, other.lastSpeed));
+        // match their speed, easing off if the bumpers are closer than touching
+        followCap = Math.max(0, other.lastSpeed + (otherGap - (SPACING + 8)) * 4);
         t.strain = Math.max(t.strain, 0.55);
       }
       t.contact = other;
@@ -1633,24 +1762,68 @@ function updateTrains(dt, now) {
     }
     if (t.headOnT < 0) t.headOnT = Math.min(0, t.headOnT + dt);
     if (nodeBlock) { sp = 0; t.strain = Math.max(t.strain, 0.4); }
-    sp *= 1 + t.scoot;
+    // a train that has been stuck for a good while (bogged down behind too many
+    // cars, or waiting on a junction that never clears) gives up and backs off
+    if (sp < 1 && !headOn && t.engine.state === "track") t.stuckT = (t.stuckT || 0) + dt;
+    else t.stuckT = 0;
+    if (t.stuckT > GIVE_UP) { t.stuckT = 0; reverseTrain(t); t.scoot = 0.45; sp = 0; }
+    sp = Math.min(sp * (1 + t.scoot), followCap);
     t.scoot *= Math.exp(-dt / 0.9);
     if (t.scoot < 0.01) t.scoot = 0;
     t.lastSpeed = sp;
     const ds = sp * dt;
     if (ds > 0.0001) {
       for (const m of members) if (!advanced.has(m)) { advance(m.pos, ds); advanced.add(m); m.rolling = true; }
-      for (const pc of pushChain) if (!advanced.has(pc.v)) { pc.v.pos.dir = pc.dir; advance(pc.v.pos, ds); advanced.add(pc.v); pc.v.rolling = true; }
+      for (const pc of pushChain) {
+        if (advanced.has(pc.v)) continue;
+        // a shoved car keeps looking the way it was looking, even if it rolls backwards
+        if (pc.v.pos.dir !== pc.dir) { pc.v.facing *= -1; pc.v.pos.dir = pc.dir; }
+        advance(pc.v.pos, ds); advanced.add(pc.v); pc.v.rolling = true;
+      }
     }
     // a lever flipped under a moving train splits it: the strays fall loose
+    // (checked along the rails: from the rear one of each coupled pair, the
+    // levers as they are now must lead exactly one car-length to the other)
     for (let i = 0; i < t.cars.length; i++) {
       const prevV = i === 0 ? t.engine : t.cars[i - 1];
-      if (prevV.world && t.cars[i].world &&
-          Math.hypot(prevV.world.x - t.cars[i].world.x, prevV.world.y - t.cars[i].world.y) > SPACING * 1.85) {
-        t.cars.splice(i).forEach((c) => (c.train = null));
+      const rear = t.rev ? prevV : t.cars[i], front = t.rev ? t.cars[i] : prevV;
+      const q = advance({ e: rear.pos.e, s: rear.pos.s, dir: rear.pos.dir }, SPACING);
+      const a = posAt(q.e, q.s), b = posAt(front.pos.e, front.pos.s);
+      if (Math.hypot(a.x - b.x, a.y - b.y) > 14) {
+        // the strays roll on under their own momentum for a bit, clear of the points
+        t.cars.splice(i).forEach((c) => { c.train = null; c.coast = Math.max(60, t.lastSpeed); });
         break;
       }
     }
+  }
+}
+
+const COAST_DECEL = 55;   // px/s² of rolling friction for a loose car
+
+// uncoupled cars that were rolling coast to a stop; one that rolls into
+// another loose car shoves it along (and slows down all the more for it)
+function updateCoasting(dt) {
+  for (const v of vehicles) {
+    if (!v.coast) continue;
+    if (v.state !== "track" || v.train || v.pushClaim) { v.coast = 0; continue; }
+    const chain = [{ v, dir: v.pos.dir }], ignore = new Set([v]);
+    let probe = { e: v.pos.e, s: v.pos.s, dir: v.pos.dir }, stop = false;
+    for (let k = 0; k < 5; k++) {
+      const h = scanAhead(probe, CONTACT, ignore);
+      if (!h) break;
+      if (h.veh.train || h.veh.pushClaim || k === 4) { stop = true; break; }   // never into a train
+      chain.push({ v: h.veh, dir: h.dir });
+      ignore.add(h.veh);
+      probe = { e: h.veh.pos.e, s: h.veh.pos.s, dir: h.dir };
+    }
+    const front = chain[chain.length - 1];
+    if (stop || junctionBlocked(null, { pos: { e: front.v.pos.e, s: front.v.pos.s, dir: front.dir } }, ignore)) { v.coast = 0; continue; }
+    for (const c of chain) {
+      if (c.v !== v && c.v.pos.dir !== c.dir) { c.v.facing *= -1; c.v.pos.dir = c.dir; }
+      advance(c.v.pos, v.coast * dt);
+      c.v.rolling = true;
+    }
+    v.coast = Math.max(0, v.coast - COAST_DECEL * chain.length * dt);
   }
 }
 
@@ -1672,7 +1845,7 @@ function reverseTrain(t) {
   // the whole train heads back the way it came; everyone turns to face the
   // new direction, which leaves the engine at the back, pushing — just like
   // reversing a real train
-  for (const m of trainMembers(t)) { m.pos.dir *= -1; m.facing *= -1; }
+  for (const m of trainMembers(t)) m.pos.dir *= -1;   // facing is relative, so everyone turns too
   t.rev = !t.rev;          // while reversed, the last car is the leading end
   t.scoot = Math.max(t.scoot, 0.3);
   t.headOnT = 0;
@@ -1700,12 +1873,13 @@ function grab(e, v) {
   held = v;
   const p = svgPoint(e);
   pointer.x = p.x; pointer.y = p.y;
-  pressStart = { x: p.x, y: p.y, t: performance.now(), lifted: false, pid: e.pointerId };
+  pressStart = { x: p.x, y: p.y, cx: e.clientX, cy: e.clientY, t: performance.now(), lifted: false, pid: e.pointerId };
   ptrHist = [{ t: performance.now(), x: p.x, y: p.y }];
   // capture so the release reaches us even if the hand leaves the window
-  try { v.el.setPointerCapture(e.pointerId); } catch {}
-  if (v.kind === "engine") playToot();
-  else if (v.animal) tone(v.animal.note);
+  // (captured on the svg itself: the toy's own element hops between layers,
+  // which would silently drop a capture held by it)
+  try { trackSvg.setPointerCapture(e.pointerId); } catch {}
+  if (v.kind !== "engine" && v.animal) tone(v.animal.note);   // engines toot on lift or tap instead
 }
 
 // the press has moved far enough to count as picking the toy up
@@ -1722,6 +1896,7 @@ function liftHeld() {
     }
   }
   freeSlot(v);
+  if (v.kind === "engine") playToot();
   v.state = "held";
   v.el.classList.add("held");
   dragLayer.appendChild(v.el);
@@ -1734,7 +1909,9 @@ window.addEventListener("pointermove", (e) => {
   pointer.x = p.x; pointer.y = p.y;
   ptrHist.push({ t: performance.now(), x: p.x, y: p.y });
   if (ptrHist.length > 10) ptrHist.shift();
-  if (!pressStart.lifted && Math.hypot(p.x - pressStart.x, p.y - pressStart.y) > 10) liftHeld();
+  // a grab starts once the hand has really moved (in screen pixels, so a
+  // fingertip wobble on a small phone table is still a tap)
+  if (!pressStart.lifted && Math.hypot(e.clientX - pressStart.cx, e.clientY - pressStart.cy) > 9) liftHeld();
 });
 
 function dropDir(near) {
@@ -1749,8 +1926,13 @@ function dropDir(near) {
   return vx * tx + vy * ty >= 0 ? 1 : -1;
 }
 
+// clamp a spot to the open felt of the table (never under the frame or off it)
+function clampToFelt(x, y) {
+  return { x: Math.max(70, Math.min(TRAY_X - 90, x)), y: Math.max(90, Math.min(VB_H - 30, y)) };
+}
+
 // a cancelled touch just leaves the toy wherever the hand vanished
-window.addEventListener("pointercancel", (e) => {
+function dropInPlace(e) {
   if (!held || (pressStart && e.pointerId !== pressStart.pid)) return;
   const v = held;
   held = null;
@@ -1760,10 +1942,13 @@ window.addEventListener("pointercancel", (e) => {
     takeSlot(v);
     v.mir = 0; v.mirA = 0;
   } else {
+    const c = clampToFelt(pointer.x, pointer.y);
     v.state = "felt";
-    v.hx = pointer.x; v.hy = pointer.y;
+    v.hx = c.x; v.hy = c.y;
   }
-});
+}
+window.addEventListener("pointercancel", dropInPlace);
+trackSvg.addEventListener("lostpointercapture", dropInPlace);
 
 window.addEventListener("pointerup", (e) => {
   if (!held || (pressStart && e.pointerId != null && e.pointerId !== pressStart.pid)) return;
@@ -1771,6 +1956,7 @@ window.addEventListener("pointerup", (e) => {
     const p = svgPoint(e);
     pointer.x = p.x; pointer.y = p.y;
   }
+  ensureAudio();   // some mobile browsers only unlock sound on a release
   const v = held;
   held = null;
   if (!pressStart || !pressStart.lifted) {
@@ -1780,6 +1966,7 @@ window.addEventListener("pointerup", (e) => {
         reverseTrain(v.train);
         showCaption(`Engine No. ${LIVERIES[v.livery].num} heads back the other way`);
       } else {
+        playToot();
         showCaption(`Engine No. ${LIVERIES[v.livery].num}`);
       }
     } else if (v.animal) {
@@ -1797,7 +1984,7 @@ window.addEventListener("pointerup", (e) => {
       return;
     }
     // ...but on the table they live on the felt: keep them off the rails
-    let x = Math.min(pointer.x, TRAY_X - 80), y = Math.max(95, Math.min(VB_H - 75, pointer.y));
+    let x = Math.max(105, Math.min(pointer.x, TRAY_X - 80)), y = Math.max(95, Math.min(VB_H - 75, pointer.y));
     if (trackClearance(x, y) < 56 || !lakeClear(x, y, 14)) {
       outer:
       for (let r = 40; r <= 240; r += 28) {
@@ -1837,7 +2024,7 @@ window.addEventListener("pointerup", (e) => {
     v.state = "track";
     const dir = dropDir(near);
     v.pos = { e: near.e, s: near.s, dir };
-    v.facing = dir;
+    v.facing = 1;
     const ang = mod(posAt(near.e, near.s).angle + (dir < 0 ? 180 : 0) + 180, 360) - 180;
     v.mir = Math.cos(ang * RAD) < 0 ? 1 : 0;
     v.mirA = v.mir;
@@ -1850,8 +2037,9 @@ window.addEventListener("pointerup", (e) => {
       tryCoupleDroppedCar(v);
     }
   } else {
+    const c = clampToFelt(pointer.x, pointer.y);
     v.state = "felt";
-    v.hx = pointer.x; v.hy = pointer.y;
+    v.hx = c.x; v.hy = c.y;
   }
 });
 
@@ -1914,7 +2102,7 @@ function ambientStart() {
     else s = Math.max(20, Math.min(s, E.len - need));
     eng.state = "track";
     eng.pos = { e: E.idx, s, dir };
-    eng.facing = dir;
+    eng.facing = 1;
     const t = makeTrain(eng);
     t.ramp = 1;
     for (let c = 0; c < nCars; c++) {
@@ -1923,28 +2111,31 @@ function ambientStart() {
       advance(back, SPACING * (c + 1));
       car.state = "track";
       car.pos = { e: back.e, s: back.s, dir: -back.dir };
-      car.facing = car.pos.dir;
+      car.facing = 1;
       car.train = t;
       t.cars.push(car);
     }
   }
   for (const li of liveries.slice(nTrains)) takeSlot(makeVehicle("engine", null, li));
   if (Math.random() < 0.3 && ai < ANIMALS.length) {
+    // one car left lying on the felt, if there is a clear patch for it
     const g = makeVehicle("car", animals[ai++]);
-    for (let tries = 0; tries < 90; tries++) {
+    let placed = false;
+    for (let tries = 0; tries < 90 && !placed; tries++) {
       const x = 160 + Math.random() * (TABLE_W - 340), y = 160 + Math.random() * (VB_H - 320);
       if (!feltClear(x, y, 85)) continue;
       if (placedDecor.some((p) => Math.hypot(p.x - x, p.y - y) < p.r + 92)) continue;
       g.state = "felt"; g.hx = x; g.hy = y;
-      break;
+      placedDecor.push({ x, y, r: 80 });
+      placed = true;
     }
-    if (g.state !== "felt") takeSlot(g);
+    if (!placed) takeSlot(g);
   }
   while (ai < ANIMALS.length) takeSlot(makeVehicle("car", animals[ai++]));
   placeFigures();
   for (const v of vehicles) {
     if (v.state !== "track") continue;
-    const ang = mod(posAt(v.pos.e, v.pos.s).angle + (v.facing < 0 ? 180 : 0) + 180, 360) - 180;
+    const ang = mod(posAt(v.pos.e, v.pos.s).angle + (v.facing * v.pos.dir < 0 ? 180 : 0) + 180, 360) - 180;
     v.mir = Math.cos(ang * RAD) < 0 ? 1 : 0;
     v.mirA = v.mir;
   }
@@ -1962,6 +2153,7 @@ collectTrackPts();
 drawWigglyWater(lakeLayer, LAKE.x, LAKE.y, LAKE.rx, LAKE.ry);
 buildCauseway();
 buildFlyover();
+buildSeams();
 buildPlatform();
 buildLevers();
 buildSign();
@@ -1975,7 +2167,7 @@ buildTray();
 ambientStart();
 
 // a small handle for automated smoke tests (harmless in normal play)
-window.__dino = { NODES, EDGES, LEVERS, vehicles, TRAINS, advance, posAt, nearestOnTrack, SPACING };
+window.__dino = { NODES, EDGES, LEVERS, vehicles, TRAINS, advance, posAt, nearestOnTrack, SPACING, makeTrain, freeSlot, tryAutoCouples, reverseTrain };
 
 let lastTime = null;
 function frame(timestamp) {
@@ -1985,12 +2177,13 @@ function frame(timestamp) {
   if (dt > 0.05) dt = 0.05;
 
   updateTrains(dt, timestamp / 1000);
+  updateCoasting(dt);
   for (const v of vehicles) positionVehicle(v, dt);
 
   for (const t of TRAINS) {
     const eng = t.engine;
     if (eng.state !== "track") continue;
-    if (zoneKindAt(eng.pos.e, eng.pos.s, 10) === "tunnel") continue;   // no smoke from inside the rock
+    if (zoneKindAt(eng.pos.e, eng.pos.s, 95) === "tunnel") continue;   // no smoke from under the rock
     if (t.lastSpeed > 4 || t.strain > 0.5) {
       t.smokeT -= dt;
       if (t.smokeT <= 0) { emitPuff(eng); t.smokeT = 0.16 - t.strain * 0.09; }
@@ -2004,3 +2197,8 @@ function frame(timestamp) {
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+
+// a phone held upright gets a tiny table: suggest turning it (once)
+if (window.matchMedia && window.matchMedia("(orientation: portrait) and (max-width: 600px)").matches) {
+  setTimeout(() => showCaption("Turn your phone sideways for a bigger table", 6000), 900);
+}

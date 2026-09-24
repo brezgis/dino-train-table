@@ -68,6 +68,18 @@ body {
 }
 #caption.show { opacity: 1; transition: opacity 0.25s ease; }
 
+/* narrow screens: let a fact wrap onto a second line instead of losing its end */
+@media (max-width: 760px) {
+  #caption {
+    height: 2.6rem;
+    line-height: 1.3rem;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+}
+
 .track-ballast {
   fill: none;
   stroke: #d8b27a;
